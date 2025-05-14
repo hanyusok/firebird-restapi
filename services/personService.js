@@ -1,5 +1,5 @@
 const { query } = require('../config/database');
-const { processKoreanFields, encodeKorean } = require('../utils/koreanUtils');
+const { processKoreanFields, encodeKorean, processMtswaitFields } = require('../utils/koreanUtils');
 const { getBaseSelectSQL, getPaginatedSelectSQL, getCountSQL } = require('./sqlQueries');
 
 const personService = {
@@ -64,7 +64,7 @@ const personService = {
     getLastCodes: async () => {
         const sql = 'SELECT PCODE, FCODE FROM "LAST" WITH LOCK';
         try {
-            const result = await query(sql);
+            const result = await query(sql);      
             return result[0] || { PCODE: null, FCODE: null };
         } catch (error) {
             console.error('Error getting last codes:', error);
@@ -100,21 +100,21 @@ const personService = {
                 SEX, RELATION, RELATION2, CRIPPLED, VINFORM, AGREE, LASTCHECK,
                 PERINFO, CARDCHECK, JAEHAN, SEARCHID, PCCHECK, PSNIDT, PSNID
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, CAST(X'${personData.PNAME ? Buffer.from(encodeKorean(personData.PNAME)).toString('hex') : ''}' AS VARCHAR(40) CHARACTER SET OCTETS), ?, ?, ?, ?,
+                ?, ?, CAST(X'${personData.RELATION2 ? Buffer.from(encodeKorean(personData.RELATION2)).toString('hex') : ''}' AS VARCHAR(6) CHARACTER SET OCTETS), ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?
             )
         `;
 
         const params = [
             personData.PCODE,
             personData.FCODE,
-            personData.PNAME ? encodeKorean(personData.PNAME) : null,
             personData.PBIRTH || null,
             personData.PIDNUM || null,
             personData.PIDNUM2 || null,
             personData.OLDIDNUM || null,
             personData.SEX || null,
             personData.RELATION || null,
-            personData.RELATION2 ? encodeKorean(personData.RELATION2) : null,
             personData.CRIPPLED || null,
             personData.VINFORM || null,
             personData.AGREE || null,
