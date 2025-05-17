@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const MtrService = require('../services/mtrService');
+const { logError } = require('../utils/logger');
+const { convertToLocalTime } = require('../utils/koreanUtils');
 
 // Get all records
 router.get('/', async (req, res) => {
@@ -8,7 +10,7 @@ router.get('/', async (req, res) => {
         const records = await MtrService.getAll();
         res.json(records);
     } catch (error) {
-        console.error('Error fetching records:', error);
+        logError('Error fetching records', { error: error.message, stack: error.stack });
         res.status(500).json({ 
             error: 'Internal server error',
             message: error.message 
@@ -20,15 +22,15 @@ router.get('/', async (req, res) => {
 router.get('/date/:visidate', async (req, res) => {
     try {
         const { visidate } = req.params;
-        // Convert YYYYMMDD to YYYY-MM-DDT00:00:00.000Z
-        const formattedDate = `${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}T00:00:00.000Z`;
+        // Use convertToLocalTime utility for date formatting
+        const formattedDate = convertToLocalTime(`${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`);
         const records = await MtrService.getByVisidate(formattedDate);
         if (!records || records.length === 0) {
             return res.status(404).json({ error: 'No records found for this date' });
         }
         res.json(records);
     } catch (error) {
-        console.error('Error fetching records by date:', error);
+        logError('Error fetching records by date', { error: error.message, stack: error.stack });
         res.status(500).json({ 
             error: 'Internal server error',
             message: error.message 
@@ -45,7 +47,7 @@ router.get('/:pcode', async (req, res) => {
         }
         res.json(record);
     } catch (error) {
-        console.error('Error fetching record:', error);
+        logError('Error fetching record', { error: error.message, stack: error.stack });
         res.status(500).json({ 
             error: 'Internal server error',
             message: error.message 
@@ -59,7 +61,7 @@ router.post('/', async (req, res) => {
         const result = await MtrService.create(req.body);
         res.status(201).json(result);
     } catch (error) {
-        console.error('Error creating record:', error);
+        logError('Error creating record', { error: error.message, stack: error.stack });
         res.status(500).json({ 
             error: 'Internal server error',
             message: error.message 
@@ -76,7 +78,7 @@ router.put('/:pcode', async (req, res) => {
         }
         res.json(result);
     } catch (error) {
-        console.error('Error updating record:', error);
+        logError('Error updating record', { error: error.message, stack: error.stack });
         res.status(500).json({ 
             error: 'Internal server error',
             message: error.message 
@@ -93,7 +95,7 @@ router.delete('/:pcode', async (req, res) => {
         }
         res.json({ message: 'Record deleted successfully' });
     } catch (error) {
-        console.error('Error deleting record:', error);
+        logError('Error deleting record', { error: error.message, stack: error.stack });
         res.status(500).json({ 
             error: 'Internal server error',
             message: error.message 

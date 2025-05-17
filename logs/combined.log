@@ -2285,3 +2285,53 @@
 {"level":"info","message":"Successfully retrieved person by SEARCHID","meta":{"searchId":"731112-2"},"service":"firebird-restapi","timestamp":"2025-05-14 21:02:19"}
 {"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-14 21:02:21"}
 {"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-14 21:02:21"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":2065,"pname":"하 "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:17"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"한ㅇ "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:18"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":25,"pname":"한유 "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:19"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"한윳 "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:19"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"한유서 "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:20"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":1,"pname":"한유석 "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:20"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":1,"pname":"한유석 "},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:21"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:22"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":1762},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:22"}
+{"level":"info","message":"Successfully retrieved person by SEARCHID","meta":{"searchId":"721023-1"},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:44"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:45"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":1762},"service":"firebird-restapi","timestamp":"2025-05-14 21:40:45"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-15 11:14:09"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:14:22"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:24:39"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:24:57"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:24:59"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:25:00"}
+{"level":"warn","message":"Missing search parameters","meta":{"query":{"searchid":"731112-1"}},"service":"firebird-restapi","timestamp":"2025-05-15 11:25:29"}
+{"level":"warn","message":"Missing search parameters","meta":{"query":{"searchid":"731112-1"}},"service":"firebird-restapi","timestamp":"2025-05-15 11:25:50"}
+{"level":"info","message":"Successfully retrieved person by SEARCHID","meta":{"searchId":"721023-1"},"service":"firebird-restapi","timestamp":"2025-05-15 11:26:04"}
+{"level":"info","message":"Successfully retrieved person by SEARCHID","meta":{"searchId":"721023-1"},"service":"firebird-restapi","timestamp":"2025-05-15 11:27:33"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-15 11:27:34"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":1762},"service":"firebird-restapi","timestamp":"2025-05-15 11:27:34"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":55,"pname":"ㅇ"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:04"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":10675,"pname":"이"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:06"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"잊"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:06"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":191,"pname":"이주"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:06"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"이줗"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:06"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"이주혀"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:07"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":11,"pname":"이주현"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:07"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":11,"pname":"이주현"},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:08"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:17"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:28:17"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":55,"pname":"ㅇ"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:01"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":10675,"pname":"이"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:03"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":191,"pname":"이주"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:03"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"잊"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:03"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"이줗"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:03"}
+{"level":"warn","message":"No person found with PNAME","meta":{"pname":"이주혀"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:04"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":11,"pname":"이주현"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:04"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":11,"pname":"이주현"},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:05"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:10"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":422},"service":"firebird-restapi","timestamp":"2025-05-15 11:29:10"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":207,"pname":"ㅎ"},"service":"firebird-restapi","timestamp":"2025-05-17 14:30:27"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":1716,"pname":"한"},"service":"firebird-restapi","timestamp":"2025-05-17 14:30:28"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":8,"pname":"한지민"},"service":"firebird-restapi","timestamp":"2025-05-17 14:30:28"}
+{"level":"info","message":"Successfully searched persons by PNAME","meta":{"count":8,"pname":"한지민"},"service":"firebird-restapi","timestamp":"2025-05-17 14:30:28"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-17 14:30:40"}
+{"level":"info","message":"Successfully retrieved person by PCODE","meta":{"pcode":412},"service":"firebird-restapi","timestamp":"2025-05-17 14:30:40"}

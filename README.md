@@ -6,18 +6,14 @@ A RESTful API service that provides access to Firebird database through HTTP end
 
 - RESTful API endpoints for CRUD operations
 - Secure database access through environment variables
+- **High-performance Firebird connection pooling (pool size 5) for all database operations**
+- Centralized SQL query templates for all tables/entities
 - CORS support for cross-origin requests
-- Comprehensive error handling
+- Comprehensive error handling with centralized logging
+- Consistent date formatting using shared utilities
 - Logging system for debugging and monitoring
 - Easy deployment with automated scripts
 - Docker support for containerized deployment
-
-## Prerequisites
-
-- Node.js (v14 or higher)
-- Firebird 2.5 or higher
-- Windows operating system
-- Docker (optional, for containerized deployment)
 
 ## Project Structure
 
@@ -32,6 +28,20 @@ firebird-restapi/
 ├── server.js       # Main application entry point
 └── package.json    # Project dependencies and scripts
 ```
+
+## Architecture
+
+- **Connection Pooling:** All Firebird database access uses connection pooling (pool size 5) via `node-firebird` for high concurrency and efficient resource management.
+- **Centralized SQL Templates:** All SQL queries are defined in `services/sqlQueries.js` for maintainability and consistency across services.
+- **Standardized Error Handling:** All routes use a centralized logger (`winston`) for error handling and logging, ensuring consistent error responses and log management.
+- **Consistent Date Formatting:** All date formatting is handled by the shared `convertToLocalTime` utility in `utils/koreanUtils.js` for uniformity across the codebase.
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- Firebird 2.5 or higher
+- Windows operating system
+- Docker (optional, for containerized deployment)
 
 ## Installation
 
@@ -88,22 +98,27 @@ To stop the server, press `Ctrl+C`.
 
 ## Docker Deployment
 
-The application can be deployed using Docker for containerized execution. Follow these steps:
+You can run the Firebird REST API in a Docker container for easy deployment and isolation.
 
-1. Build the Docker image:
+### 1. Build the Docker image
+
 ```bash
+# From the project root directory:
 docker build -t firebird-restapi .
 ```
 
-2. Run the container:
+### 2. Run the Docker container
+
 ```bash
 docker run --name fbapi -p 3000:3000 --env-file .env firebird-restapi
 ```
 
-This will:
-- Create a container named "firebird-api"
-- Map port 3000 from the container to port 3001 on your host machine
-- Use the environment variables from your .env file
+- `--name fbapi`: Names the container `fbapi` for easy reference.
+- `-p 3000:3000`: Maps port 3000 in the container to port 3000 on your host.
+- `--env-file .env`: Loads environment variables from your local `.env` file (make sure it is configured for your Firebird server).
+- `firebird-restapi`: The name of the image you built.
+
+### 3. Stopping and removing the container
 
 To stop the container:
 ```bash
@@ -115,12 +130,17 @@ To remove the container:
 docker rm fbapi
 ```
 
-To view container logs:
+### 4. Viewing logs
+
 ```bash
 docker logs fbapi
 ```
 
-Note: Make sure your Firebird database is accessible from the container. You may need to update the `FIREBIRD_HOST` in your `.env` file to use the correct host IP address.
+### 5. Troubleshooting
+- Ensure your Firebird database is accessible from the container. If running Firebird on your host, you may need to set `FIREBIRD_HOST=host.docker.internal` in your `.env` file.
+- If you use a remote Firebird server, set `FIREBIRD_HOST` to the appropriate IP or hostname.
+- Make sure the port in `FIREBIRD_PORT` matches your Firebird server's port (default is 3050).
+- If you change the container port, update the `-p` flag accordingly.
 
 ## API Endpoints
 

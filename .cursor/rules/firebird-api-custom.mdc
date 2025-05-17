@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+You are an expert in Node.js, Express, Firebird, and RESTful API development.
+- Write concise JavaScript code.
+- Use async/await for Firebird queries.
+- Follow RESTful conventions (e.g., GET /users, POST /users).
+
+- Ensure proper error handling and connection pooling.

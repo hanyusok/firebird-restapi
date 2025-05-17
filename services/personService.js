@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { pooledQueryDb } = require('../config/database');
 const { processKoreanFields, encodeKorean, processMtswaitFields } = require('../utils/koreanUtils');
 const { getBaseSelectSQL, getPaginatedSelectSQL, getCountSQL } = require('./sqlQueries');
 
@@ -10,8 +10,8 @@ const personService = {
         const countSql = getCountSQL();
         
         const [results, countResult] = await Promise.all([
-            query(sql, [limit, offset]),
-            query(countSql)
+            pooledQueryDb('person', sql, [limit, offset]),
+            pooledQueryDb('person', countSql)
         ]);
 
         const total = countResult[0].TOTAL;
@@ -37,7 +37,7 @@ const personService = {
         const sql = `${getBaseSelectSQL()} WHERE CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) CONTAINING CAST(X'${Buffer.from(encodeKorean(formattedName)).toString('hex')}' AS VARCHAR(40) CHARACTER SET OCTETS) ORDER BY PCODE`;
         
         try {           
-            const result = await query(sql);
+            const result = await pooledQueryDb('person', sql);
             const processedResult = processKoreanFields(result);            
             return processedResult;
         } catch (error) {
@@ -49,14 +49,14 @@ const personService = {
     // Get persons by pcode
     getByPcode: async (pcode) => {
         const sql = `${getBaseSelectSQL()} WHERE PCODE = ? ORDER BY PCODE`;
-        const result = await query(sql, [pcode]);
+        const result = await pooledQueryDb('person', sql, [pcode]);
         return processKoreanFields(result);
     },
 
     // Get persons by searchId
     getBySearchId: async (searchId) => {
         const sql = `${getBaseSelectSQL()} WHERE SEARCHID = ? ORDER BY PCODE`;
-        const result = await query(sql, [searchId]);
+        const result = await pooledQueryDb('person', sql, [searchId]);
         return processKoreanFields(result);
     },
 
@@ -64,7 +64,7 @@ const personService = {
     getLastCodes: async () => {
         const sql = 'SELECT PCODE, FCODE FROM "LAST" WITH LOCK';
         try {
-            const result = await query(sql);      
+            const result = await pooledQueryDb('person', sql);      
             return result[0] || { PCODE: null, FCODE: null };
         } catch (error) {
             console.error('Error getting last codes:', error);
@@ -86,7 +86,7 @@ const personService = {
         
         // Update the LAST table with new codes
         console.log('Updating LAST table with new codes');
-        await query('UPDATE "LAST" SET PCODE = ?, FCODE = ?', [newPcode, newFcode]);
+        await pooledQueryDb('person', 'UPDATE "LAST" SET PCODE = ?, FCODE = ?', [newPcode, newFcode]);
         
         // Set the new codes in personData
         personData.PCODE = newPcode;
@@ -130,7 +130,7 @@ const personService = {
 
         try {
             console.log('Attempting to insert person with PCODE:', personData.PCODE);
-            await query(sql, params);
+            await pooledQueryDb('person', sql, params);
             console.log('Successfully inserted person');
             
             // Verify the LAST table after insertion
@@ -149,7 +149,7 @@ const personService = {
         const sql = 'DELETE FROM PERSON WHERE PCODE = ?';
         
         try {
-            const result = await query(sql, [pcode]);
+            const result = await pooledQueryDb('person', sql, [pcode]);
             return { success: true, message: 'Person deleted successfully' };
         } catch (error) {
             console.error('Error in deletePerson:', error);
@@ -196,7 +196,7 @@ const personService = {
         `;
 
         try {
-            await query(sql, updateValues);
+            await pooledQueryDb('person', sql, updateValues);
             // Return the updated person
             return await personService.getByPcode(pcode);
         } catch (error) {

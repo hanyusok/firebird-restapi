@@ -1,5 +1,12 @@
 const iconv = require('iconv-lite');
 
+// Helper function to convert UTC date to local time
+const convertToLocalTime = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+};
+
 // Helper function to encode Korean characters
 const encodeKorean = (text) => {
     if (!text) return null;   
@@ -27,7 +34,11 @@ const processKoreanFields = (result) => {
                 PNAME: decodeKorean(item.PNAME),
                 RELATION2: decodeKorean(item.RELATION2),
                 MEMO1: decodeKorean(item.MEMO1),
-                MEMO2: decodeKorean(item.MEMO2)
+                MEMO2: decodeKorean(item.MEMO2),
+                PBIRTH: convertToLocalTime(item.PBIRTH),
+                VINFORM: convertToLocalTime(item.VINFORM),
+                LASTCHECK: convertToLocalTime(item.LASTCHECK),
+                CARDCHECK: convertToLocalTime(item.CARDCHECK)
             };
         });        
         return processed;
@@ -38,7 +49,11 @@ const processKoreanFields = (result) => {
         PNAME: decodeKorean(result.PNAME),
         RELATION2: decodeKorean(result.RELATION2),
         MEMO1: decodeKorean(result.MEMO1),
-        MEMO2: decodeKorean(result.MEMO2)
+        MEMO2: decodeKorean(result.MEMO2),
+        PBIRTH: convertToLocalTime(result.PBIRTH),
+        VINFORM: convertToLocalTime(result.VINFORM),
+        LASTCHECK: convertToLocalTime(result.LASTCHECK),
+        CARDCHECK: convertToLocalTime(result.CARDCHECK)
     };    
     return processed;
 };
@@ -49,7 +64,8 @@ const processMtswaitFields = (result) => {
         const processed = result.map(item => {            
             return {
                 ...item,                
-                DISPLAYNAME: decodeKorean(item.DISPLAYNAME)
+                DISPLAYNAME: decodeKorean(item.DISPLAYNAME),
+                VISIDATE: convertToLocalTime(item.VISIDATE)
             };
         });        
         return processed;
@@ -57,7 +73,8 @@ const processMtswaitFields = (result) => {
     
     const processed = {
         ...result,        
-        DISPLAYNAME: decodeKorean(result.DISPLAYNAME)
+        DISPLAYNAME: decodeKorean(result.DISPLAYNAME),
+        VISIDATE: convertToLocalTime(result.VISIDATE)
     };    
     return processed;
 };
@@ -85,5 +102,6 @@ module.exports = {
     decodeKorean,
     processKoreanFields,
     processMtswaitFields,
-    generateResIds
+    generateResIds,
+    convertToLocalTime
 }; 

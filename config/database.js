@@ -75,9 +75,84 @@ function getMtsmtrDb(callback) {
     Firebird.attach(mtsmtrOptions, callback);
 }
 
+// Generic async query helper for any DB type
+const queryDb = (dbType, sql, params = []) => {
+    let options;
+    switch (dbType) {
+        case 'person':
+            options = personOptions;
+            break;
+        case 'mtswait':
+            options = mtswaitOptions;
+            break;
+        case 'mtsmtr':
+            options = mtsmtrOptions;
+            break;
+        default:
+            throw new Error('Unknown dbType: ' + dbType);
+    }
+    return new Promise((resolve, reject) => {
+        Firebird.attach(options, (err, db) => {
+            if (err) {
+                console.error('Database connection error:', err);
+                return reject(err);
+            }
+            db.query(sql, params, (err, result) => {
+                db.detach();
+                if (err) {
+                    console.error('Query execution error:', err);
+                    return reject(err);
+                }
+                resolve(result);
+            });
+        });
+    });
+};
+
+// Create pools for each DB (pool size 5)
+const personPool = Firebird.pool(5, personOptions);
+const mtswaitPool = Firebird.pool(5, mtswaitOptions);
+const mtsmtrPool = Firebird.pool(5, mtsmtrOptions);
+
+// Generic pooled query helper
+const pooledQueryDb = (dbType, sql, params = []) => {
+    let pool;
+    switch (dbType) {
+        case 'person':
+            pool = personPool;
+            break;
+        case 'mtswait':
+            pool = mtswaitPool;
+            break;
+        case 'mtsmtr':
+            pool = mtsmtrPool;
+            break;
+        default:
+            throw new Error('Unknown dbType: ' + dbType);
+    }
+    return new Promise((resolve, reject) => {
+        pool.get((err, db) => {
+            if (err) {
+                console.error('Database pool error:', err);
+                return reject(err);
+            }
+            db.query(sql, params, (err, result) => {
+                db.detach();
+                if (err) {
+                    console.error('Query execution error:', err);
+                    return reject(err);
+                }
+                resolve(result);
+            });
+        });
+    });
+};
+
 module.exports = {
     query,
     getPersonDb,
     getMtswaitDb,
-    getMtsmtrDb
+    getMtsmtrDb,
+    queryDb,
+    pooledQueryDb
 }; 
