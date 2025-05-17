@@ -25,10 +25,8 @@ router.get('/date/:visidate', async (req, res) => {
         // Use convertToLocalTime utility for date formatting
         const formattedDate = convertToLocalTime(`${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`);
         const records = await MtrService.getByVisidate(formattedDate);
-        if (!records || records.length === 0) {
-            return res.status(404).json({ error: 'No records found for this date' });
-        }
-        res.json(records);
+        // Always return 200 with an array, even if empty
+        res.json(records || []);
     } catch (error) {
         logError('Error fetching records by date', { error: error.message, stack: error.stack });
         res.status(500).json({ 

@@ -41,32 +41,20 @@ router.get('/persons/search', async (req, res) => {
 
         if (pname) {
             const result = await personService.getByName(pname);
-            if (!result || result.length === 0) {
-                logWarn('No person found with PNAME', { pname });
-                return res.status(404).json({ error: 'No person found with that pname' });
-            }
-            logInfo('Successfully searched persons by PNAME', { pname, count: result.length });
-            return res.json(result);
+            // Always return 200 with an array, even if empty
+            return res.json(result || []);
         }
 
         if (pcode) {
             const result = await personService.getByPcode(parseInt(pcode));
-            if (!result || result.length === 0) {
-                logWarn('No person found with PCODE', { pcode });
-                return res.status(404).json({ error: 'No person found with that pcode' });
-            }
-            logInfo('Successfully retrieved person by PCODE', { pcode });
-            return res.json(result);
+            // Always return 200 with an array, even if empty
+            return res.json(result || []);
         }
 
         if (searchId) {
             const result = await personService.getBySearchId(searchId);
-            if (!result || result.length === 0) {
-                logWarn('No person found with SEARCHID', { searchId });
-                return res.status(404).json({ error: 'No person found with that searchId' });
-            }
-            logInfo('Successfully retrieved person by SEARCHID', { searchId });
-            return res.json(result);
+            // Always return 200 with an array, even if empty
+            return res.json(result || []);
         }
 
         logWarn('Missing search parameters', { query: req.query });
