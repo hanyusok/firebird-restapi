@@ -1,6 +1,0 @@
-2025-05-29 11:22:18 - Starting C:\Program Files\nodejs\node.exe  --harmony C:\dev\firebird-restapi\node_modules\node-windows\lib\wrapper.js --file C:\dev\firebird-restapi\service.js --scriptoptions= --log "Firebird REST API wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
-2025-05-29 11:22:18 - Started 11636
-2025-05-29 11:23:59 - Starting C:\Program Files\nodejs\node.exe  --harmony C:\dev\firebird-restapi\node_modules\node-windows\lib\wrapper.js --file C:\dev\firebird-restapi\service.js --scriptoptions= --log "Firebird REST API wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
-2025-05-29 11:23:59 - Started 10508
-2025-05-29 11:24:31 - Starting C:\Program Files\nodejs\node.exe  --harmony C:\dev\firebird-restapi\node_modules\node-windows\lib\wrapper.js --file C:\dev\firebird-restapi\service.js --scriptoptions= --log "Firebird REST API wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
-2025-05-29 11:24:31 - Started 12260
