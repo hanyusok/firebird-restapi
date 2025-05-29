@@ -2483,3 +2483,4 @@
 {"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-29 11:06:37"}
 {"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-29 11:17:12"}
 {"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-29 11:17:55"}
+{"level":"info","message":"Successfully retrieved persons","meta":{"count":10,"limit":10,"page":1},"service":"firebird-restapi","timestamp":"2025-05-29 11:25:38"}
