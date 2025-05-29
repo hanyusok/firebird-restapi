@@ -1,0 +1,64 @@
+  PCODE integer NOT NULL, // 개인번호 
+  FCODE integer,  //가족번호
+  PNAME varchar(40), //이름
+  PBIRTH date,  //생년월일  "2009-11-27T15:00:00.000Z",
+  PIDNUM varchar(30), //"IceHgIpq/0jVoHoBuY+66A==",
+  OLDIDNUM varchar(30), // 과거이용, 최근 null
+  SEX varchar(1),   // ["1","2","3","4"] = ["남","여","M","F"]   최근  3, 4
+  RELATION varchar(1),  //관계   ["0","1"] = ["미입력","본인"], 
+  RELATION2 varchar(6), //관계2  ["세대주", "부", "모","기타타"] 
+  CRIPPLED varchar(1),    //장애? ["0","1] = [false,true]
+-  BOHUN varchar(1),
+-  BP varchar(7),
+-  BLOODTYPE varchar(5),
+-  INJECTION varchar(1),
+-  DAYS smallint,
+-  PREG varchar(1),
+-  LONGMED varchar(1),
+   VINFORM date,
+-  EDITDATE date,
+  AGREE varchar(1),  // 개인정보 동의 ["0", "1"] = [ 미입력, 동의]
+-  VAX varchar(9),
+-  VAX2 varchar(9),
+-  VAX3 varchar(9),
+  LASTCHECK date,   // 건강보험조회 날짜 "2025-02-27T15:00:00.000Z"
+-  MEMO1 varchar(80),
+-  MEMO2 varchar(80),
+-  MEMO3 blob sub_type 1,
+-  MEMO4 blob sub_type 1,
+-  PICTURE blob sub_type 0,
+-  "VIEW" blob sub_type 1,
+-  VIEWCHECK date,
+-  CHARTNUM varchar(15),
+  PERINFO varchar(1),  // NIP 발송 동의   ["0", "1"] = [ 미입력, 동의]
+-  CDCHECK varchar(1),
+-  CDDATE date,
+-  PRES2 varchar(1),
+-  WEIGHT varchar(6),
+-  HEIGHT varchar(4),
+-  FEED smallint,
+-  MILK smallint,
+-  MEMO blob sub_type 1,
+  CARDCHECK date,  // 건강보험조회날짜  "2025-02-27T15:00:00.000Z"
+- DIABETES varchar(10),
+-  SAMEDATE1 varchar(10),
+-  SAMEDATE2 varchar(10),
+  JAEHAN varchar(1),  // 0
+  SEARCHID varchar(8),  // "900705-6" 주민번호-첫글자자
+  PCCHECK varchar(1),  // 0
+-  PCDATE date,
+-  PCNUM varchar(15),
+-  PCDATE1 date,
+-  PCDATE2 date,
+-  G_PATH varchar(40),
+-  G_DATE date,
+  PSNIDT varchar(1), // 보험카드 검증? ["0", "1"] = [false, true]
+  PSNID varchar(10), // 보험카드적용일자 "2025-02-28"
+  CONSTRAINT PK_PERSON PRIMARY KEY (PCODE)
+);
+CREATE INDEX SI2_PERSON ON PERSON (PNAME);
+CREATE INDEX SI3_PERSON ON PERSON (PIDNUM);
+CREATE INDEX SI4_PERSON ON PERSON (FCODE);
+CREATE INDEX SI_PERSON ON PERSON (VINFORM);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON PERSON TO  MTSUSER WITH GRANT OPTION;
