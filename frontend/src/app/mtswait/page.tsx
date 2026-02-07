@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Trash2, Edit } from 'lucide-react';
 
 interface WaitItem {
     PCODE: number;
@@ -9,6 +10,15 @@ interface WaitItem {
     RESID1: string;
     RESID2: string;
     DISPLAYNAME: string;
+    GOODOC: string | null;
+    ROOMCODE: string;
+    ROOMNM: string;
+    DEPTCODE: string;
+    DEPTNM: string;
+    DOCTRCODE: string;
+    DOCTRNM: string;
+    D_ALARM: string | null;
+    PSN: string | null;
 }
 
 export default function MtsWaitPage() {
@@ -16,6 +26,8 @@ export default function MtsWaitPage() {
     const [waitList, setWaitList] = useState<WaitItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [editingKey, setEditingKey] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<Partial<WaitItem>>({});
 
     useEffect(() => {
         fetchWaitList(date);
@@ -44,6 +56,54 @@ export default function MtsWaitPage() {
             setWaitList([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEdit = (item: WaitItem) => {
+        const key = `${item.PCODE}-${item.VISIDATE}`;
+        setEditingKey(key);
+        setEditForm({
+            RESID1: item.RESID1,
+            RESID2: item.RESID2
+        });
+    };
+
+    const handleSaveEdit = async (pcode: number, visidate: string) => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/mtswait/${pcode}/${visidate}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update record');
+            }
+
+            alert('Record updated successfully!');
+            setEditingKey(null);
+            fetchWaitList(date);
+        } catch (err: any) {
+            alert('Update failed: ' + err.message);
+        }
+    };
+
+    const handleDelete = async (pcode: number, visidate: string) => {
+        if (!confirm('Are you sure you want to remove this patient from the waiting list?')) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/mtswait/${pcode}/${visidate}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete record');
+            }
+
+            alert('Record deleted successfully!');
+            fetchWaitList(date);
+        } catch (err: any) {
+            alert('Delete failed: ' + err.message);
         }
     };
 
@@ -81,6 +141,9 @@ export default function MtsWaitPage() {
 
                 {!loading && !error && waitList.length > 0 && (
                     <div className="flex flex-col">
+                        <div className="text-sm text-gray-600 mb-2">
+                            Total: {waitList.length} patient(s) waiting
+                        </div>
                         <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
                                 <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -91,7 +154,7 @@ export default function MtsWaitPage() {
                                                     PCODE
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Name (Display)
+                                                    Name
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Res ID 1
@@ -102,28 +165,89 @@ export default function MtsWaitPage() {
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Visit Date
                                                 </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Actions
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {waitList.map((item) => (
-                                                <tr key={`${item.PCODE}-${item.VISIDATE}`}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.PCODE}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {item.DISPLAYNAME}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.RESID1}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.RESID2}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.VISIDATE}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {waitList.map((item) => {
+                                                const key = `${item.PCODE}-${item.VISIDATE}`;
+                                                const isEditing = editingKey === key;
+
+                                                return (
+                                                    <tr key={key} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {item.PCODE}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {item.DISPLAYNAME}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.RESID1 || ''}
+                                                                    onChange={(e) => setEditForm({ ...editForm, RESID1: e.target.value })}
+                                                                    className="border rounded px-2 py-1 w-full"
+                                                                />
+                                                            ) : (
+                                                                item.RESID1
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.RESID2 || ''}
+                                                                    onChange={(e) => setEditForm({ ...editForm, RESID2: e.target.value })}
+                                                                    className="border rounded px-2 py-1 w-full"
+                                                                />
+                                                            ) : (
+                                                                item.RESID2
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {item.VISIDATE}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                            {isEditing ? (
+                                                                <div className="flex space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleSaveEdit(item.PCODE, item.VISIDATE)}
+                                                                        className="text-green-600 hover:text-green-900"
+                                                                    >
+                                                                        Save
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setEditingKey(null)}
+                                                                        className="text-gray-600 hover:text-gray-900"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleEdit(item)}
+                                                                        className="text-blue-600 hover:text-blue-900"
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDelete(item.PCODE, item.VISIDATE)}
+                                                                        className="text-red-600 hover:text-red-900"
+                                                                        title="Delete"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>

@@ -2,23 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Trash2, Edit, Plus } from 'lucide-react';
 
 interface MtrItem {
+    '#'?: number;
     PCODE: number;
     VISIDATE: string;
-    VISITIME: string; // Time string
+    VISITIME: string;
     PNAME: string;
-    PBIRTH: string;
-    GUBUN: string;
-    DOC: string; // Doctor?
+    PBIRTH: string | null;
+    AGE: string;
+    PHONENUM: string;
+    SEX: string;
     SERIAL: number;
+    N: number;
+    GUBUN: string;
+    RESERVED: string;
+    FIN: string;
 }
 
-export default function MtsMtrPage() {
+export default function MtsmtrPage() {
     const [date, setDate] = useState('2026-02-07');
     const [mtrList, setMtrList] = useState<MtrItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editForm, setEditForm] = useState<Partial<MtrItem>>({});
 
     useEffect(() => {
         fetchMtrList(date);
@@ -50,11 +59,73 @@ export default function MtsMtrPage() {
         }
     };
 
+    const handleEdit = (item: MtrItem) => {
+        setEditingId(item['#'] || 0);
+        setEditForm({
+            PNAME: item.PNAME,
+            AGE: item.AGE,
+            PHONENUM: item.PHONENUM,
+            SEX: item.SEX,
+            GUBUN: item.GUBUN
+        });
+    };
+
+    const handleSaveEdit = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/mtsmtr/${id}/${date}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update record');
+            }
+
+            alert('Record updated successfully!');
+            setEditingId(null);
+            fetchMtrList(date);
+        } catch (err: any) {
+            alert('Update failed: ' + err.message);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this record?')) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/mtsmtr/${id}/${date}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete record');
+            }
+
+            alert('Record deleted successfully!');
+            fetchMtrList(date);
+        } catch (err: any) {
+            alert('Delete failed: ' + err.message);
+        }
+    };
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('ko-KR');
+    };
+
+    const formatTime = (timeStr: string) => {
+        if (!timeStr) return '';
+        const t = new Date(timeStr);
+        return t.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    };
+
     return (
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-semibold text-gray-900">Treatment List (MTSMTR)</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">Treatment Records (MTSMTR)</h1>
                     <Link href="/" className="text-blue-600 hover:text-blue-800">
                         &larr; Back to Dashboard
                     </Link>
@@ -84,6 +155,9 @@ export default function MtsMtrPage() {
 
                 {!loading && !error && mtrList.length > 0 && (
                     <div className="flex flex-col">
+                        <div className="text-sm text-gray-600 mb-2">
+                            Total: {mtrList.length} record(s)
+                        </div>
                         <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
                                 <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -91,13 +165,7 @@ export default function MtsMtrPage() {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    No
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Type
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Time
+                                                    PCODE
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Name
@@ -106,31 +174,118 @@ export default function MtsMtrPage() {
                                                     Birth
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Doctor
+                                                    Age
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Sex
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Visit Time
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Type
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Actions
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {mtrList.map((item, index) => (
-                                                <tr key={`${item.PCODE}-${index}`}>
+                                            {mtrList.map((item) => (
+                                                <tr key={`${item.PCODE}-${item.VISIDATE}-${item['#']}`} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.GUBUN}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {/* VISITIME is usually ISO date string, we want HH:mm */}
-                                                        {item.VISITIME ? new Date(item.VISITIME).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true }) : '-'}
+                                                        {item.PCODE}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {item.PNAME}
+                                                        {editingId === item['#'] ? (
+                                                            <input
+                                                                type="text"
+                                                                value={editForm.PNAME || ''}
+                                                                onChange={(e) => setEditForm({ ...editForm, PNAME: e.target.value })}
+                                                                className="border rounded px-2 py-1 w-full"
+                                                            />
+                                                        ) : (
+                                                            item.PNAME
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.PBIRTH}
+                                                        {item.PBIRTH || '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {item.DOC}
+                                                        {editingId === item['#'] ? (
+                                                            <input
+                                                                type="text"
+                                                                value={editForm.AGE || ''}
+                                                                onChange={(e) => setEditForm({ ...editForm, AGE: e.target.value })}
+                                                                className="border rounded px-2 py-1 w-20"
+                                                            />
+                                                        ) : (
+                                                            item.AGE
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {editingId === item['#'] ? (
+                                                            <select
+                                                                value={editForm.SEX || ''}
+                                                                onChange={(e) => setEditForm({ ...editForm, SEX: e.target.value })}
+                                                                className="border rounded px-2 py-1"
+                                                            >
+                                                                <option value="1">M</option>
+                                                                <option value="2">F</option>
+                                                            </select>
+                                                        ) : (
+                                                            item.SEX === '1' ? 'M' : 'F'
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {formatTime(item.VISITIME)}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {editingId === item['#'] ? (
+                                                            <input
+                                                                type="text"
+                                                                value={editForm.GUBUN || ''}
+                                                                onChange={(e) => setEditForm({ ...editForm, GUBUN: e.target.value })}
+                                                                className="border rounded px-2 py-1 w-20"
+                                                            />
+                                                        ) : (
+                                                            item.GUBUN
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        {editingId === item['#'] ? (
+                                                            <div className="flex space-x-2">
+                                                                <button
+                                                                    onClick={() => handleSaveEdit(item['#'] || 0)}
+                                                                    className="text-green-600 hover:text-green-900"
+                                                                >
+                                                                    Save
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setEditingId(null)}
+                                                                    className="text-gray-600 hover:text-gray-900"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex space-x-2">
+                                                                <button
+                                                                    onClick={() => handleEdit(item)}
+                                                                    className="text-blue-600 hover:text-blue-900"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(item['#'] || 0)}
+                                                                    className="text-red-600 hover:text-red-900"
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}

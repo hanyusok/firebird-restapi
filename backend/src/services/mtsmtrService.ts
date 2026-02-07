@@ -1,6 +1,6 @@
 import { pooledQueryDb } from '../config/database';
 import { processKoreanFields } from '../utils/koreanUtils';
-import { getMtrByVisidateSQL } from './sqlQueries';
+import { getMtrByVisidateSQL, getMtrInsertSQL, getMtrUpdateSQL, getMtrDeleteSQL } from './sqlQueries';
 
 const mtsmtrService = {
     // Helper to get table name from date
@@ -29,6 +29,57 @@ const mtsmtrService = {
         // MTR2026 has PNAME.
 
         return processKoreanFields(results);
+    },
+
+    create: async (data: any) => {
+        const tableName = mtsmtrService.getTableName(data.VISIDATE);
+        const sql = getMtrInsertSQL(tableName);
+
+        const params = [
+            data.PCODE,
+            data.VISIDATE,
+            data.VISITIME || new Date(),
+            data.PNAME,  // String - connection handles encoding
+            data.PBIRTH || null,
+            data.AGE || '',
+            data.PHONENUM || '',
+            data.SEX || '',
+            data.SERIAL || 1,
+            data.N || 0,
+            data.GUBUN || '요양',
+            data.RESERVED || '',
+            data.FIN || ''
+        ];
+
+        await pooledQueryDb('mtsmtr', sql, params);
+        return { message: 'MTR record created' };
+    },
+
+    update: async (id: number, visidate: string, data: any) => {
+        const tableName = mtsmtrService.getTableName(visidate);
+        const sql = getMtrUpdateSQL(tableName);
+
+        const params = [
+            data.VISITIME || new Date(),
+            data.PNAME,
+            data.PBIRTH || null,
+            data.AGE || '',
+            data.PHONENUM || '',
+            data.SEX || '',
+            data.GUBUN || '요양',
+            id  // "#" column value
+        ];
+
+        await pooledQueryDb('mtsmtr', sql, params);
+        return { message: 'MTR record updated' };
+    },
+
+    delete: async (id: number, visidate: string) => {
+        const tableName = mtsmtrService.getTableName(visidate);
+        const sql = getMtrDeleteSQL(tableName);
+
+        await pooledQueryDb('mtsmtr', sql, [id]);
+        return { message: 'MTR record deleted' };
     }
 };
 

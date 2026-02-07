@@ -15,12 +15,13 @@ export const getMtrByPcodeSQL = (tableName: string = 'MTR2025'): string => `${ge
 export const getMtrByVisidateSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} WHERE VISIDATE = ? ORDER BY VISITIME`;
 export const getMtrAllSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} ORDER BY VISIDATE DESC, VISITIME DESC`;
 export const getMtrInsertSQL = (tableName: string = 'MTR2025'): string => `INSERT INTO ${tableName} ("#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN) VALUES (GEN_ID(GEN_${tableName}_SEQ, 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-export const getMtrUpdateSQL = (): string => `UPDATE MTR2025 SET VISIDATE = ?, VISITIME = ?, PNAME = ?, PBIRTH = ?, AGE = ?, PHONENUM = ?, SEX = ?, SERIAL = ?, N = ?, GUBUN = ?, RESERVED = ?, FIN = ? WHERE PCODE = ?`;
-export const getMtrDeleteSQL = (): string => `DELETE FROM MTR2025 WHERE PCODE = ?`;
+export const getMtrUpdateSQL = (tableName: string = 'MTR2025'): string => `UPDATE ${tableName} SET VISITIME = ?, PNAME = ?, PBIRTH = ?, AGE = ?, PHONENUM = ?, SEX = ?, GUBUN = ? WHERE "#" = ?`;
+export const getMtrDeleteSQL = (tableName: string = 'MTR2025'): string => `DELETE FROM ${tableName} WHERE "#" = ?`;
 
 // WAIT tables (Dynamic table name)
 // Updated: WAIT2026 does not store PNAME. We must join with PERSON table or fetch separately.
-export const waitSelectFields = 'PCODE, VISIDATE, RESID1, RESID2';
+// Include all columns with CAST for Korean text fields
+export const waitSelectFields = 'PCODE, VISIDATE, RESID1, RESID2, GOODOC, ROOMCODE, CAST(ROOMNM AS VARCHAR(40) CHARACTER SET OCTETS) as ROOMNM, DEPTCODE, CAST(DEPTNM AS VARCHAR(40) CHARACTER SET OCTETS) as DEPTNM, DOCTRCODE, CAST(DOCTRNM AS VARCHAR(40) CHARACTER SET OCTETS) as DOCTRNM, D_ALARM, PSN';
 export const getWaitSelectSQL = (tableName: string = 'WAIT2025'): string => `SELECT ${waitSelectFields} FROM ${tableName}`;
 export const getWaitByVisidateSQL = (tableName: string = 'WAIT2025'): string => `${getWaitSelectSQL(tableName)} WHERE VISIDATE = ?`;
 export const getWaitInsertSQL = (tableName: string = 'WAIT2025'): string => `INSERT INTO ${tableName} (PCODE, VISIDATE, RESID1, RESID2, ROOMCODE, ROOMNM, DEPTCODE, DEPTNM, DOCTRCODE, DOCTRNM) VALUES (?, ?, ?, ?, '1', ?, '14', ?, '63221', ?)`;

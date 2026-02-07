@@ -17,10 +17,20 @@ export const encodeKorean = (text: string | null): Buffer | null => {
 // Helper function to decode Korean characters
 export const decodeKorean = (buffer: Buffer | string | null): string | null => {
     if (!buffer) return null;
-    // If the buffer is already a string, return it
+
+    // If it's a string, it might be a hex string from CAST AS OCTETS
     if (typeof buffer === 'string') {
+        // Check if it looks like a hex string (only contains 0-9, a-f, A-F)
+        if (/^[0-9a-fA-F]+$/.test(buffer)) {
+            // Convert hex string to Buffer
+            const hexBuffer = Buffer.from(buffer, 'hex');
+            return iconv.decode(hexBuffer, 'euc-kr');
+        }
+        // If it's already a regular string (UTF-8), return it
         return buffer;
     }
+
+    // If it's a Buffer, decode it
     const decodedText = iconv.decode(buffer, 'euc-kr');
     return decodedText;
 };
@@ -65,6 +75,9 @@ export const processMtswaitFields = (result: any): any => {
             return {
                 ...item,
                 DISPLAYNAME: decodeKorean(item.DISPLAYNAME),
+                ROOMNM: decodeKorean(item.ROOMNM),
+                DEPTNM: decodeKorean(item.DEPTNM),
+                DOCTRNM: decodeKorean(item.DOCTRNM),
                 VISIDATE: convertToLocalTime(item.VISIDATE)
             };
         });
@@ -74,6 +87,9 @@ export const processMtswaitFields = (result: any): any => {
     const processed = {
         ...result,
         DISPLAYNAME: decodeKorean(result.DISPLAYNAME),
+        ROOMNM: decodeKorean(result.ROOMNM),
+        DEPTNM: decodeKorean(result.DEPTNM),
+        DOCTRNM: decodeKorean(result.DOCTRNM),
         VISIDATE: convertToLocalTime(result.VISIDATE)
     };
     return processed;

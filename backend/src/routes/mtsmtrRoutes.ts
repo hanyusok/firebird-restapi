@@ -1,5 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import mtsmtrService from '../services/mtsmtrService';
+import validate from '../middleware/validate';
+import { createMtrSchema, updateMtrSchema } from '../schemas/mtsmtrSchema';
 
 const router = express.Router();
 
@@ -42,6 +44,107 @@ router.get('/date/:visidate', async (req: Request, res: Response, next: NextFunc
         // Person list returns array.
 
         res.json(data || []);
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * @swagger
+ * /api/mtsmtr:
+ *   post:
+ *     summary: Create a new MTR record
+ *     tags: [MTSMTR]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - PCODE
+ *               - VISIDATE
+ *               - PNAME
+ *             properties:
+ *               PCODE:
+ *                 type: integer
+ *               VISIDATE:
+ *                 type: string
+ *                 format: date
+ *               PNAME:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ */
+router.post('/', validate(createMtrSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await mtsmtrService.create(req.body);
+        res.status(201).json(result);
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * @swagger
+ * /api/mtsmtr/{id}/{visidate}:
+ *   put:
+ *     summary: Update an MTR record
+ *     tags: [MTSMTR]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: MTR record ID (# column)
+ *       - in: path
+ *         name: visidate
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Updated
+ */
+router.put('/:id/:visidate', validate(updateMtrSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id, visidate } = req.params;
+        const result = await mtsmtrService.update(Number(id), visidate as string, req.body);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * @swagger
+ * /api/mtsmtr/{id}/{visidate}:
+ *   delete:
+ *     summary: Delete an MTR record
+ *     tags: [MTSMTR]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: MTR record ID (# column)
+ *       - in: path
+ *         name: visidate
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
+router.delete('/:id/:visidate', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id, visidate } = req.params;
+        const result = await mtsmtrService.delete(Number(id), visidate as string);
+        res.json(result);
     } catch (err) {
         next(err);
     }
