@@ -16,7 +16,7 @@ export const personOptions: Options = {
 };
 
 // Connection options for MTSWAIT database
-export const mtswaitOptions: Options = {
+export const mtswaitOptions: any = {
     host: process.env.FIREBIRD_HOST,
     port: process.env.FIREBIRD_PORT ? parseInt(process.env.FIREBIRD_PORT, 10) : undefined,
     database: process.env.FIREBIRD_MTSWAIT_DATABASE,
@@ -24,7 +24,8 @@ export const mtswaitOptions: Options = {
     password: process.env.FIREBIRD_PASSWORD,
     lowercase_keys: false,
     role: undefined,
-    pageSize: 4096
+    pageSize: 4096,
+    charset: 'KSC5601'
 };
 
 // Connection options for MTSMTR database

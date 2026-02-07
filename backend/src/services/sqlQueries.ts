@@ -24,6 +24,6 @@ export const getMtrDeleteSQL = (tableName: string = 'MTR2025'): string => `DELET
 export const waitSelectFields = 'PCODE, VISIDATE, RESID1, RESID2, GOODOC, ROOMCODE, CAST(ROOMNM AS VARCHAR(40) CHARACTER SET OCTETS) as ROOMNM, DEPTCODE, CAST(DEPTNM AS VARCHAR(40) CHARACTER SET OCTETS) as DEPTNM, DOCTRCODE, CAST(DOCTRNM AS VARCHAR(40) CHARACTER SET OCTETS) as DOCTRNM, D_ALARM, PSN';
 export const getWaitSelectSQL = (tableName: string = 'WAIT2025'): string => `SELECT ${waitSelectFields} FROM ${tableName}`;
 export const getWaitByVisidateSQL = (tableName: string = 'WAIT2025'): string => `${getWaitSelectSQL(tableName)} WHERE VISIDATE = ?`;
-export const getWaitInsertSQL = (tableName: string = 'WAIT2025'): string => `INSERT INTO ${tableName} (PCODE, VISIDATE, RESID1, RESID2, ROOMCODE, ROOMNM, DEPTCODE, DEPTNM, DOCTRCODE, DOCTRNM) VALUES (?, ?, ?, ?, '1', ?, '14', ?, '63221', ?)`;
+export const getWaitInsertSQL = (tableName: string = 'WAIT2025'): string => `INSERT INTO ${tableName} (PCODE, VISIDATE, RESID1, RESID2, ROOMCODE, ROOMNM, DEPTCODE, DEPTNM, DOCTRCODE, DOCTRNM, GOODOC) VALUES (?, ?, ?, ?, '1', ?, '14', ?, '63221', ?, '')`;
 export const getWaitUpdateSQL = (tableName: string = 'WAIT2025'): string => `UPDATE ${tableName} SET RESID1=?, RESID2=? WHERE PCODE=? AND VISIDATE=?`;
 export const getWaitDeleteSQL = (tableName: string = 'WAIT2025'): string => `DELETE FROM ${tableName} WHERE PCODE = ? AND VISIDATE = ?`;

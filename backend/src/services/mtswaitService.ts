@@ -86,13 +86,22 @@ const mtswaitService = {
     const mtrTableName = tableName.replace('WAIT', 'MTR'); // e.g. WAIT2026 -> MTR2026
 
     // 0. Fetch Person Details for MTR
-    const personSql = `SELECT PCODE, PNAME, PBIRTH, SEX FROM PERSON WHERE PCODE = ?`;
+    const personSql = `
+      SELECT 
+        PCODE, 
+        CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) as PNAME,
+        PBIRTH, 
+        CAST(SEX AS VARCHAR(2) CHARACTER SET OCTETS) as SEX
+      FROM PERSON 
+      WHERE PCODE = ?
+    `;
     const personResult = await pooledQueryDb('person', personSql, [data.PCODE]);
 
     if (!personResult || personResult.length === 0) {
       throw new Error('Person not found');
     }
     const person = personResult[0]; // Raw buffer data
+    console.log('Person data fetched:', { PCODE: person.PCODE, hasPNAME: !!person.PNAME, hasSEX: !!person.SEX });
 
     // Generate RESID1 and RESID2 from VISIDATE
     const { resid1, resid2 } = generateResIds(data.VISIDATE);
@@ -102,11 +111,12 @@ const mtswaitService = {
     const dept = '가정의학과';
     const doctor = '한유석';
 
+    // WAIT table requires hex encoding for Korean text (unlike MTR table)
     const roomHex = Buffer.from(encodeKorean(room) || '').toString('hex');
     const deptHex = Buffer.from(encodeKorean(dept) || '').toString('hex');
     const doctorHex = Buffer.from(encodeKorean(doctor) || '').toString('hex');
 
-    // 1. Insert into WAIT table
+    // 1. Insert into WAIT table using hex encoding for Korean text
     const waitSql = `
         INSERT INTO ${tableName} (
             PCODE, VISIDATE, RESID1, RESID2, 
@@ -162,7 +172,7 @@ const mtswaitService = {
        Issues:
        1. PNAME is Buffer (encoded). MTR expects Encoded string? Yes.
        2. SEX is char?
-       3. PHONENUM?
+       3. PHONENUM? -> PERSON table doesn't have PHONENUM, so we'll use empty string
     */
 
     // We already have the raw buffers from PERSON for PNAME. We can use them directly or cast them?
@@ -186,30 +196,43 @@ const mtswaitService = {
 
     const visitTime = new Date(); // Current time for VISITIME
 
-    // GUBUN = '요양' -> Pass as String, connection handles encoding
+    // GUBUN = '요양' -> Pass as string, connection handles encoding
     const gubun = '요양';
 
-    // Decode Person fields if they are Buffers
+    // Decode Person fields from buffers to strings
+    // The connection will handle encoding automatically when we pass strings
     const pname = decodeKorean(person.PNAME) || '';
     const sex = decodeKorean(person.SEX) || '';
-    const phone = decodeKorean(person.PHONENUM) || '';
+    const phone = '';  // PERSON table doesn't have PHONENUM
 
     const mtrParams = [
       data.PCODE,
       data.VISIDATE,
       visitTime,
-      pname,
+      pname,           // Pass string, connection handles encoding
       person.PBIRTH,
       age,
-      phone,
-      sex,
-      gubun
+      phone,           // Empty string
+      sex,             // Pass string, connection handles encoding
+      gubun            // Pass string, connection handles encoding
     ];
 
     try {
+      console.log('Attempting MTR insert with params:', {
+        PCODE: mtrParams[0],
+        VISIDATE: mtrParams[1],
+        VISITIME: mtrParams[2],
+        PNAME_isBuffer: Buffer.isBuffer(mtrParams[3]),
+        PBIRTH: mtrParams[4],
+        AGE: mtrParams[5],
+        PHONENUM_isBuffer: Buffer.isBuffer(mtrParams[6]),
+        SEX_isBuffer: Buffer.isBuffer(mtrParams[7]),
+        GUBUN_isBuffer: Buffer.isBuffer(mtrParams[8])
+      });
       await pooledQueryDb('mtsmtr', mtrSql, mtrParams);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to insert into MTR:', e);
+      console.error('Error details:', { message: e.message, gdscode: e.gdscode });
       // Do we revert WAIT insert? ideal but complex. 
       // For now, log and allow partial failure (or throw to indicate partial success/failure)
       // User wants it to update, so maybe throw to alert frontend.
