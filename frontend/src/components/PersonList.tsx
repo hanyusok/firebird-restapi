@@ -12,14 +12,19 @@ export default function PersonList() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [birthDate, setBirthDate] = useState('');
 
     const fetchPersons = async () => {
         setLoading(true);
         try {
-            if (searchTerm) {
+            if (searchTerm || birthDate) {
                 // Use search endpoint
+                const params: any = {};
+                if (searchTerm) params.pname = searchTerm;
+                if (birthDate) params.pbirth = birthDate;
+
                 const response = await api.get<Person[]>(`/persons/search`, {
-                    params: { pname: searchTerm }
+                    params
                 });
                 setPersons(response.data);
                 setTotalPages(1); // Search endpoint doesn't return pagination yet
@@ -46,26 +51,92 @@ export default function PersonList() {
             fetchPersons();
         }, 500);
         return () => clearTimeout(timer);
-    }, [page, searchTerm]);
+    }, [page, searchTerm, birthDate]);
+
+    const handleRegister = async (person: Person) => {
+        if (!confirm(`Register ${person.PNAME} (PCODE: ${person.PCODE}) for today?`)) return;
+
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const visidate = `${yyyy}-${mm}-${dd}`;
+        const visidateFormatted = `${yyyy}${mm}${dd}`; // YYYYMMDD format for API
+
+        try {
+            // Check if already registered for today
+            try {
+                const checkResponse = await api.get(`/mtswait/date/${visidateFormatted}`);
+                const existingRegistrations = checkResponse.data;
+
+                if (Array.isArray(existingRegistrations)) {
+                    const alreadyRegistered = existingRegistrations.some(
+                        (reg: any) => reg.PCODE === person.PCODE
+                    );
+
+                    if (alreadyRegistered) {
+                        alert(`${person.PNAME} is already registered for today (${visidate})`);
+                        return;
+                    }
+                }
+            } catch (checkError: any) {
+                // If 404, no records exist for today - proceed with registration
+                if (checkError.response?.status !== 404) {
+                    throw checkError;
+                }
+            }
+
+            // Proceed with registration
+            await api.post('/mtswait', {
+                PCODE: person.PCODE,
+                VISIDATE: visidate
+            });
+            alert('Registered successfully!');
+        } catch (error: any) {
+            console.error('Registration failed:', error);
+            const errorMessage = error.response?.data?.message || error.message;
+
+            // Provide user-friendly error message for constraint violations
+            if (errorMessage.includes('PRIMARY') || errorMessage.includes('UNIQUE')) {
+                alert(`${person.PNAME} is already registered for ${visidate}`);
+            } else {
+                alert('Registration failed: ' + errorMessage);
+            }
+        }
+    };
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-white p-4 shadow rounded-lg">
+            <div className="flex justify-between items-center bg-white p-4 shadow rounded-lg flex-wrap gap-4">
                 <h2 className="text-xl font-semibold text-gray-800">
                     Person List <span className="text-sm text-gray-500 ml-2">({totalItems} total)</span>
                 </h2>
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Search by name..."
-                        className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setPage(1); // Reset to page 1 on search
-                        }}
-                    />
-                    <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <div className="flex space-x-2">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1); // Reset to page 1 on search
+                            }}
+                        />
+                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    </div>
+                    <div className="relative">
+                        <input
+                            type="date"
+                            placeholder="Birthdate"
+                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={birthDate}
+                            onChange={(e) => {
+                                setBirthDate(e.target.value);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -89,18 +160,21 @@ export default function PersonList() {
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Last Check
                                 </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Action
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
                                         Loading...
                                     </td>
                                 </tr>
                             ) : persons.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
                                         No persons found
                                     </td>
                                 </tr>
@@ -122,6 +196,14 @@ export default function PersonList() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {person.LASTCHECK}
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                                onClick={() => handleRegister(person)}
+                                                className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
+                                            >
+                                                접수
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             )}
@@ -131,7 +213,7 @@ export default function PersonList() {
             </div>
 
             {/* Pagination */}
-            {!searchTerm && (
+            {!searchTerm && !birthDate && (
                 <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 shadow rounded-lg">
                     <div className="flex-1 flex justify-between sm:hidden">
                         <button

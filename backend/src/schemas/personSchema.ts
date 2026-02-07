@@ -45,6 +45,7 @@ export const getPersonSchema = {
 export const searchPersonSchema = {
     query: Joi.object({
         pname: Joi.string().optional(),
+        pbirth: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
         pcode: Joi.number().integer().optional(),
         searchId: Joi.string().optional()
     }).min(1) // Require at least one

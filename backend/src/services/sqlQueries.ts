@@ -10,11 +10,11 @@ export const getCountSQL = (): string => 'SELECT COUNT(*) as total FROM PERSON';
 
 // MTR2025 table fields and queries
 export const mtrSelectFields = 'PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN';
-export const getMtrSelectSQL = (): string => `SELECT ${mtrSelectFields} FROM MTR2025`;
-export const getMtrByPcodeSQL = (): string => `${getMtrSelectSQL()} WHERE PCODE = ? ORDER BY VISIDATE DESC, VISITIME DESC`;
-export const getMtrByVisidateSQL = (): string => `${getMtrSelectSQL()} WHERE VISIDATE = ? ORDER BY VISITIME`;
-export const getMtrAllSQL = (): string => `${getMtrSelectSQL()} ORDER BY VISIDATE DESC, VISITIME DESC`;
-export const getMtrInsertSQL = (): string => `INSERT INTO MTR2025 ("#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN) VALUES (GEN_ID(GEN_MTR2025_SEQ, 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+export const getMtrSelectSQL = (tableName: string = 'MTR2025'): string => `SELECT ${mtrSelectFields} FROM ${tableName}`;
+export const getMtrByPcodeSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} WHERE PCODE = ? ORDER BY VISIDATE DESC, VISITIME DESC`;
+export const getMtrByVisidateSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} WHERE VISIDATE = ? ORDER BY VISITIME`;
+export const getMtrAllSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} ORDER BY VISIDATE DESC, VISITIME DESC`;
+export const getMtrInsertSQL = (tableName: string = 'MTR2025'): string => `INSERT INTO ${tableName} ("#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN) VALUES (GEN_ID(GEN_${tableName}_SEQ, 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 export const getMtrUpdateSQL = (): string => `UPDATE MTR2025 SET VISIDATE = ?, VISITIME = ?, PNAME = ?, PBIRTH = ?, AGE = ?, PHONENUM = ?, SEX = ?, SERIAL = ?, N = ?, GUBUN = ?, RESERVED = ?, FIN = ? WHERE PCODE = ?`;
 export const getMtrDeleteSQL = (): string => `DELETE FROM MTR2025 WHERE PCODE = ?`;
 

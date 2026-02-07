@@ -82,17 +82,27 @@ export const processMtswaitFields = (result: any): any => {
 export const generateResIds = (visidate: string | Date) => {
     const date = new Date(visidate);
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate() + 1).padStart(2, '0'); // Add 1 day for RESID1? logic copied from original
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    let y, m, d;
+    // Check if visidate is a string like YYYY-MM-DD
+    if (typeof visidate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(visidate)) {
+        [y, m, d] = visidate.split('-');
+    } else {
+        y = String(year);
+        m = String(date.getMonth() + 1).padStart(2, '0');
+        d = String(date.getDate()).padStart(2, '0');
+    }
+
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
 
     // Generate RESID1: YYYYMMDDHHMMSS
-    const resid1 = `${year}${month}${day}${hours}${minutes}${seconds}`;
+    const resid1 = `${y}${m}${d}${hours}${minutes}${seconds}`;
 
     // Generate RESID2: YYYY-MM-DD
-    const resid2 = `${year}-${month}-${day}`;
+    const resid2 = `${y}-${m}-${d}`;
 
     return { resid1, resid2 };
 };

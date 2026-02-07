@@ -120,21 +120,24 @@ router.get('/persons', async (req: Request, res: Response, next: NextFunction) =
  */
 router.get('/persons/search', validate(searchPersonSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { pname, pcode, searchId } = req.query;
-        logHttp('GET /persons/search', { pname, pcode, searchId });
+        const { pname, pbirth, pcode, searchId } = req.query;
+        logHttp('GET /persons/search', { pname, pbirth, pcode, searchId });
 
-        if (pname) {
-            const result = await personService.getByName(pname as string);
-            return res.json(result || []);
-        }
-
+        // Handle PCODE search (highest priority, unique)
         if (pcode) {
             const result = await personService.getByPcode(parseInt(pcode as string));
             return res.json(result || []);
         }
 
+        // Handle SearchID (unique)
         if (searchId) {
             const result = await personService.getBySearchId(searchId as string);
+            return res.json(result || []);
+        }
+
+        // Handle Name and/or Birthdate search
+        if (pname || pbirth) {
+            const result = await personService.search(pname as string, pbirth as string);
             return res.json(result || []);
         }
 

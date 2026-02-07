@@ -12,6 +12,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run tunnel\""
   },
   "dependencies": {
+    "axios": "^1.13.4",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

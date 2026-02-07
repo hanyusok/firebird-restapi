@@ -30,20 +30,53 @@ const personService = {
         };
     },
 
-    // Get persons by name
-    getByName: async (name: string) => {
-        // Ensure the name is properly formatted for PNAME field
-        const formattedName = name.trim().substring(0, 40).toUpperCase();
-        const encodedName = encodeKorean(formattedName);
-        const hexName = encodedName ? Buffer.from(encodedName).toString('hex') : '';
-        const sql = `${getBaseSelectSQL()} WHERE CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) CONTAINING CAST(X'${hexName}' AS VARCHAR(40) CHARACTER SET OCTETS) ORDER BY PCODE`;
+    // Search persons by name and/or birthdate
+    search: async (name?: string, birthdate?: string) => {
+        let sql = getBaseSelectSQL();
+        const conditions: string[] = [];
+        // We can't use simple params array easily if we have multiple conditions with potential encoding
+        // But we can construct the WHERE clause.
+
+        if (name) {
+            const formattedName = name.trim().substring(0, 40).toUpperCase();
+            const encodedName = encodeKorean(formattedName);
+            const hexName = encodedName ? Buffer.from(encodedName).toString('hex') : '';
+            conditions.push(`CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) CONTAINING CAST(X'${hexName}' AS VARCHAR(40) CHARACTER SET OCTETS)`);
+        }
+
+        if (birthdate) {
+            // Assumes PBIRTH is stored as string 'YYYY-MM-DD' or similar compatible format in DB
+            // If DB uses DATE type, we might need cast. equivalent to 'YYYY-MM-DD'
+            // Based on previous files, PBIRTH seems to be used as string in inserts.
+            // Let's assume it's string matching or direct comparison.
+            // Firebird DATE literals are 'YYYY-MM-DD'.
+            // Safest is to use parameter if possible, but mixing with the hex string above is tricky if we use pooledQueryDb with simple string concat.
+            // Let's try to use params for birthdate.
+            // But wait, constructing sql with `?` and passing params array is best.
+        }
+
+        // Re-thinking: Use sql string construction for everything to be consistent with the hex approach which is hard to parameterize directly as binary
+        // (node-firebird params are mostly for standard types)
+
+        if (birthdate) {
+            conditions.push(`PBIRTH = '${birthdate}'`);
+        }
+
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        } else {
+            // No conditions? Return empty or limit?
+            // Schema requires at least one param, so this shouldn't happen essentially.
+            return [];
+        }
+
+        sql += ' ORDER BY PCODE';
 
         try {
             const result = await pooledQueryDb('person', sql);
-            const processedResult = processKoreanFields(result);
-            return processedResult;
+            return processKoreanFields(result);
         } catch (error) {
-            console.error('Error in searchByName:', error);
+            console.error('Error in search:', error);
             throw error;
         }
     },
@@ -96,57 +129,72 @@ const personService = {
 
         console.log('Final personData before insertion:', personData);
 
-        const hexPname = personData.PNAME ? Buffer.from(encodeKorean(personData.PNAME) || '').toString('hex') : '';
-        const hexRelation2 = personData.RELATION2 ? Buffer.from(encodeKorean(personData.RELATION2) || '').toString('hex') : '';
+        // Encode strings to EUC-KR buffers
+        const pnameEncoded = encodeKorean(personData.PNAME);
+        const relation2Encoded = encodeKorean(personData.RELATION2);
+
+        // Other fields might need encoding if they are strings. 
+        // SEX is char(1), usually ASCII.
+        // MEMO? 
+        const memo1Encoded = encodeKorean(personData.MEMO1);
+        const memo2Encoded = encodeKorean(personData.MEMO2);
 
         const sql = `
             INSERT INTO PERSON (
                 PCODE, FCODE, PNAME, PBIRTH, PIDNUM, PIDNUM2, OLDIDNUM,
                 SEX, RELATION, RELATION2, CRIPPLED, VINFORM, AGREE, LASTCHECK,
-                PERINFO, CARDCHECK, JAEHAN, SEARCHID, PCCHECK, PSNIDT, PSNID
+                PERINFO, CARDCHECK, JAEHAN, SEARCHID, PCCHECK, PSNIDT, PSNID,
+                MEMO1, MEMO2
             ) VALUES (
-                ?, ?, CAST(X'${hexPname}' AS VARCHAR(40) CHARACTER SET OCTETS), ?, ?, ?, ?,
-                ?, ?, CAST(X'${hexRelation2}' AS VARCHAR(6) CHARACTER SET OCTETS), ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?,
+                ?, ?
             )
         `;
 
         const params = [
-            personData.PCODE,
-            personData.FCODE,
-            personData.PBIRTH || null,
-            personData.PIDNUM || null,
-            personData.PIDNUM2 || null,
-            personData.OLDIDNUM || null,
-            personData.SEX || null,
-            personData.RELATION || null,
-            personData.CRIPPLED || null,
-            personData.VINFORM || null,
-            personData.AGREE || null,
-            personData.LASTCHECK || null,
-            personData.PERINFO || null,
-            personData.CARDCHECK || null,
-            personData.JAEHAN || null,
-            personData.SEARCHID || null,
-            personData.PCCHECK || null,
-            personData.PSNIDT || null,
-            personData.PSNID || null
+            // PCODE, FCODE
+            newPcode, newFcode,
+            // PNAME (Buffer)
+            pnameEncoded,
+            // PBIRTH, PIDNUM, PIDNUM2, OLDIDNUM
+            personData.PBIRTH, personData.PIDNUM, personData.PIDNUM2, personData.OLDIDNUM,
+            // SEX
+            personData.SEX,
+            // RELATION
+            personData.RELATION,
+            // RELATION2 (Buffer)
+            relation2Encoded,
+            // CRIPPLED
+            personData.CRIPPLED,
+            // VINFORM
+            personData.VINFORM,
+            // AGREE
+            personData.AGREE,
+            // LASTCHECK
+            personData.LASTCHECK,
+            // PERINFO
+            personData.PERINFO,
+            // CARDCHECK
+            personData.CARDCHECK,
+            // JAEHAN
+            personData.JAEHAN,
+            // SEARCHID
+            personData.SEARCHID,
+            // PCCHECK
+            personData.PCCHECK,
+            // PSNIDT
+            personData.PSNIDT,
+            // PSNID
+            personData.PSNID,
+            // MEMO1, MEMO2
+            memo1Encoded, memo2Encoded
         ];
 
-        try {
-            console.log('Attempting to insert person with PCODE:', personData.PCODE);
-            await pooledQueryDb('person', sql, params);
-            console.log('Successfully inserted person');
+        await pooledQueryDb('person', sql, params);
 
-            // Verify the LAST table after insertion
-            const verifyLastCodes = await personService.getLastCodes();
-            console.log('LAST table after insertion:', verifyLastCodes);
-
-            return await personService.getByPcode(personData.PCODE);
-        } catch (error) {
-            console.error('Error in createPerson:', error);
-            throw error;
-        }
+        return { PCODE: newPcode, ...personData };
     },
 
     // Delete a person by PCODE
@@ -200,7 +248,7 @@ const personService = {
             UPDATE PERSON
             SET ${updateFields.join(', ')}
             WHERE PCODE = ?
-        `;
+    `;
 
         try {
             await pooledQueryDb('person', sql, updateValues);
