@@ -40,7 +40,7 @@ router.get('/date/:visidate', /* validate(getWaitSchema), */ async (req: Request
   try {
     const { visidate } = req.params;
     // Manual date format handling due to legacy YYYYMMDD support vs Schema YYYY-MM-DD
-    const formattedDate = convertToLocalTime(`${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`);
+    const formattedDate = `${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`;
     const data = await mtswaitService.getByVisitDate(formattedDate!);
     if (!data || (Array.isArray(data) && data.length === 0)) {
       return res.status(404).json({ error: 'No records found for this date' });

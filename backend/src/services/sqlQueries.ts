@@ -18,10 +18,11 @@ export const getMtrInsertSQL = (): string => `INSERT INTO MTR2025 ("#", PCODE, V
 export const getMtrUpdateSQL = (): string => `UPDATE MTR2025 SET VISIDATE = ?, VISITIME = ?, PNAME = ?, PBIRTH = ?, AGE = ?, PHONENUM = ?, SEX = ?, SERIAL = ?, N = ?, GUBUN = ?, RESERVED = ?, FIN = ? WHERE PCODE = ?`;
 export const getMtrDeleteSQL = (): string => `DELETE FROM MTR2025 WHERE PCODE = ?`;
 
-// WAIT2025 table fields and queries
-export const waitSelectFields = 'PCODE, VISIDATE, RESID1, RESID2, CAST(DISPLAYNAME AS VARCHAR(40) CHARACTER SET OCTETS) as DISPLAYNAME';
-export const getWaitSelectSQL = (): string => `SELECT ${waitSelectFields} FROM WAIT2025`;
-export const getWaitByVisidateSQL = (): string => `${getWaitSelectSQL()} WHERE VISIDATE = ?`;
-export const getWaitInsertSQL = (): string => `INSERT INTO WAIT2025 (PCODE, VISIDATE, RESID1, RESID2, DISPLAYNAME, ROOMCODE, ROOMNM, DEPTCODE, DEPTNM, DOCTRCODE, DOCTRNM) VALUES (?, ?, ?, ?, ?, '1', ?, '14', ?, '63221', ?)`;
-export const getWaitUpdateSQL = (): string => `UPDATE WAIT2025 SET RESID1=?, RESID2=?, DISPLAYNAME=? WHERE PCODE=? AND VISIDATE=?`;
-export const getWaitDeleteSQL = (): string => `DELETE FROM WAIT2025 WHERE PCODE = ? AND VISIDATE = ?`;
+// WAIT tables (Dynamic table name)
+// Updated: WAIT2026 does not store PNAME. We must join with PERSON table or fetch separately.
+export const waitSelectFields = 'PCODE, VISIDATE, RESID1, RESID2';
+export const getWaitSelectSQL = (tableName: string = 'WAIT2025'): string => `SELECT ${waitSelectFields} FROM ${tableName}`;
+export const getWaitByVisidateSQL = (tableName: string = 'WAIT2025'): string => `${getWaitSelectSQL(tableName)} WHERE VISIDATE = ?`;
+export const getWaitInsertSQL = (tableName: string = 'WAIT2025'): string => `INSERT INTO ${tableName} (PCODE, VISIDATE, RESID1, RESID2, ROOMCODE, ROOMNM, DEPTCODE, DEPTNM, DOCTRCODE, DOCTRNM) VALUES (?, ?, ?, ?, '1', ?, '14', ?, '63221', ?)`;
+export const getWaitUpdateSQL = (tableName: string = 'WAIT2025'): string => `UPDATE ${tableName} SET RESID1=?, RESID2=? WHERE PCODE=? AND VISIDATE=?`;
+export const getWaitDeleteSQL = (tableName: string = 'WAIT2025'): string => `DELETE FROM ${tableName} WHERE PCODE = ? AND VISIDATE = ?`;

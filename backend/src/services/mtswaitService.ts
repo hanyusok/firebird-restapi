@@ -1,4 +1,5 @@
-import { pooledQueryDb } from '../config/database';
+import Firebird from 'node-firebird';
+import { pooledQueryDb, mtswaitOptions } from '../config/database';
 import { processMtswaitFields, encodeKorean, generateResIds } from '../utils/koreanUtils';
 import {
   getWaitByVisidateSQL,
@@ -9,21 +10,87 @@ import {
 
 const mtswaitService = {
 
-  // Get by VISIDATE
+  // Helper to get table name from date
+  getTableName: (dateStr: string) => {
+    // Expected formats: YYYYMMDD, YYYY-MM-DD, etc.
+    const cleanDate = dateStr.replace(/[^0-9]/g, '');
+    const year = cleanDate.substring(0, 4);
+    return `WAIT${year}`;
+  },
+
+  // Get by VISIDATE (with name lookup from PERSON table)
   getByVisitDate: async (visidate: string) => {
-    const sql = getWaitByVisidateSQL();
-    const result = await pooledQueryDb('mtswait', sql, [visidate]);
-    return processMtswaitFields(result);
+    const tableName = mtswaitService.getTableName(visidate);
+    const sql = getWaitByVisidateSQL(tableName);
+    console.log(`Querying ${tableName} for date ${visidate} (direct attach)`);
+
+    // 1. Get Wait List
+    const waitList: any[] = await new Promise((resolve, reject) => {
+      Firebird.attach(mtswaitOptions, (err: any, db: any) => {
+        if (err) {
+          console.error('Direct attach failed:', err);
+          return reject(err);
+        }
+        db.query(sql, [visidate], (err: any, result: any) => {
+          db.detach();
+          if (err) {
+            console.error('Query failed:', err);
+            return reject(err);
+          }
+          resolve(result);
+        });
+      });
+    });
+
+    if (waitList.length === 0) return [];
+
+    // 2. Extract PCODEs
+    const pcodes = [...new Set(waitList.map(item => item.PCODE))];
+
+    // 3. Query PERSON table for names
+    // Note: 'pooledQueryDb' handles the connection. We need to query 'person'.
+    // We can't use simple WHERE PCODE IN (?) because Firebird doesn't support array params directly like that easily in node-firebird without expanding ?
+    // But pooledQueryDb expects array of params.
+    // We will construct the SQL dynamically for the IN clause.
+    const placeholders = pcodes.map(() => '?').join(',');
+    const personSql = `SELECT PCODE, CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) as PNAME FROM PERSON WHERE PCODE IN (${placeholders})`;
+
+    const personResults = await pooledQueryDb('person', personSql, pcodes); // params are the pcodes array
+
+    // 4. Map PCODE -> PNAME
+    const nameMap = new Map();
+    if (Array.isArray(personResults)) {
+      personResults.forEach((p: any) => {
+        nameMap.set(p.PCODE, p.PNAME); // PNAME is likely Buffer here
+      });
+    } else if (personResults) {
+      const p = personResults as any;
+      nameMap.set(p.PCODE, p.PNAME);
+    }
+
+    // 5. Merge and Process
+    const merged = waitList.map(item => {
+      const nameBuffer = nameMap.get(item.PCODE);
+      return {
+        ...item,
+        DISPLAYNAME: nameBuffer // processMtswaitFields will decode this
+      };
+    });
+
+    return processMtswaitFields(merged);
   },
 
   // Create
   create: async (data: any) => {
+    const tableName = mtswaitService.getTableName(data.VISIDATE);
+
     // Generate RESID1 and RESID2 from VISIDATE
     const { resid1, resid2 } = generateResIds(data.VISIDATE);
 
     // Encode strings
-    const displayNameEncoded = encodeKorean(data.DISPLAYNAME || '');
-    const displayNameHex = displayNameEncoded ? Buffer.from(displayNameEncoded).toString('hex') : '';
+    // const displayNameEncoded = encodeKorean(data.DISPLAYNAME || '');
+    // const displayNameHex = displayNameEncoded ? Buffer.from(displayNameEncoded).toString('hex') : '';
+    // Name is not stored in WAIT table anymore
 
     // Hardcoded logic from original file
     const room = encodeKorean('제1진료실');
@@ -34,58 +101,14 @@ const mtswaitService = {
     const deptHex = dept ? Buffer.from(dept).toString('hex') : '';
     const doctorHex = doctor ? Buffer.from(doctor).toString('hex') : '';
 
-    const sql = getWaitInsertSQL();
-    const params = [
-      data.PCODE,
-      data.VISIDATE,
-      resid1,
-      resid2,
-      displayNameHex,
-      roomHex, // '1' is handled in SQL? No, roomname passed as encoded
-      // wait, the SQL has hardcoded '1', '14', '63221'. The values are for names?
-      // Original: getWaitInsertSQL() => ... VALUES (?, ?, ?, ?, ?, '1', ?, '14', ?, '63221', ?)
-      // Params count: 5 + 1 + 1 + 1 = 8?
-      // Original params: [PCODE, VISIDATE, RESID1, RESID2, hex(DISPLAYNAME), hex('...'), hex('...'), hex('...')]
-      // 1. PCODE
-      // 2. VISIDATE
-      // 3. RESID1
-      // 4. RESID2
-      // 5. DISPLAYNAME
-      // 6. ROOMNM (after '1')
-      // 7. DEPTNM (after '14')
-      // 8. DOCTRNM (after '63221')
+    const sql = getWaitInsertSQL(tableName);
 
-      deptHex,
-      doctorHex
-      // Wait, let's double check the SQL in sqlQueries.ts vs params here
-    ];
-
-    // Re-checking SQL:
-    // ... VALUES (?, ?, ?, ?, ?, '1', ?, '14', ?, '63221', ?)
-    // ?1: PCODE
-    // ?2: VISIDATE
-    // ?3: RESID1
-    // ?4: RESID2
-    // ?5: DISPLAYNAME
-    // '1'
-    // ?6: ROOMNM
-    // '14'
-    // ?7: DEPTNM
-    // '63221'
-    // ?8: DOCTRNM
-
-    // My previous 'roomHex' corresponds to ?6?
-    // original: Buffer.from(encodeKorean('제1진료실')).toString('hex') -> ROOMNM
-    // original: Buffer.from(encodeKorean('가정의학과')).toString('hex') -> DEPTNM
-    // original: Buffer.from(encodeKorean('한유석')).toString('hex') -> DOCTRNM
-
-    // So params should be:
     const paramsFixed = [
       data.PCODE,
       data.VISIDATE,
       resid1,
       resid2,
-      displayNameHex,
+      // displayNameHex, // Removed
       roomHex,
       deptHex,
       doctorHex
@@ -96,15 +119,16 @@ const mtswaitService = {
 
   // Update
   update: async (pcode: number | string, visidate: string, data: any) => {
-    const sql = getWaitUpdateSQL();
+    const tableName = mtswaitService.getTableName(visidate);
+    const sql = getWaitUpdateSQL(tableName);
 
-    const displayNameEncoded = encodeKorean(data.DISPLAYNAME || '');
-    const displayNameHex = displayNameEncoded ? Buffer.from(displayNameEncoded).toString('hex') : '';
+    // const displayNameEncoded = encodeKorean(data.DISPLAYNAME || '');
+    // const displayNameHex = displayNameEncoded ? Buffer.from(displayNameEncoded).toString('hex') : '';
 
     const params = [
       data.RESID1,
       data.RESID2,
-      displayNameHex,
+      // displayNameHex, // Removed
       pcode,
       visidate
     ];
@@ -113,7 +137,8 @@ const mtswaitService = {
 
   // Delete
   delete: async (pcode: number | string, visidate: string) => {
-    const sql = getWaitDeleteSQL();
+    const tableName = mtswaitService.getTableName(visidate);
+    const sql = getWaitDeleteSQL(tableName);
     return await pooledQueryDb('mtswait', sql, [pcode, visidate]);
   },
 };

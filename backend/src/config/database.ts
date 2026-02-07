@@ -4,7 +4,7 @@ import Firebird, { Options, Database } from 'node-firebird';
 dotenv.config();
 
 // Connection options for PERSON database
-const personOptions: Options = {
+export const personOptions: Options = {
     host: process.env.FIREBIRD_HOST,
     port: process.env.FIREBIRD_PORT ? parseInt(process.env.FIREBIRD_PORT, 10) : undefined,
     database: process.env.FIREBIRD_PERSON_DATABASE,
@@ -16,7 +16,7 @@ const personOptions: Options = {
 };
 
 // Connection options for MTSWAIT database
-const mtswaitOptions: Options = {
+export const mtswaitOptions: Options = {
     host: process.env.FIREBIRD_HOST,
     port: process.env.FIREBIRD_PORT ? parseInt(process.env.FIREBIRD_PORT, 10) : undefined,
     database: process.env.FIREBIRD_MTSWAIT_DATABASE,
@@ -28,7 +28,7 @@ const mtswaitOptions: Options = {
 };
 
 // Connection options for MTSMTR database
-const mtsmtrOptions: any = {
+export const mtsmtrOptions: any = {
     host: process.env.FIREBIRD_HOST,
     port: process.env.FIREBIRD_PORT ? parseInt(process.env.FIREBIRD_PORT, 10) : undefined,
     database: process.env.FIREBIRD_MTSMTR_DATABASE,
@@ -113,6 +113,11 @@ export const queryDb = (dbType: DbType, sql: string, params: any[] = []): Promis
 };
 
 // Create pools for each DB (pool size 5)
+try {
+    const fs = require('fs');
+    fs.appendFileSync('debug.log', `[${new Date().toISOString()}] Creating MTSWAIT pool with: ${JSON.stringify(mtswaitOptions)}\n`);
+} catch (e) { console.error(e); }
+
 const personPool = Firebird.pool(5, personOptions);
 const mtswaitPool = Firebird.pool(5, mtswaitOptions);
 const mtsmtrPool = Firebird.pool(5, mtsmtrOptions);
