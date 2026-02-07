@@ -1,188 +1,111 @@
 # Firebird REST API
 
-A RESTful API service that provides access to Firebird databases through HTTP endpoints. This project allows you to interact with your Firebird database using standard REST API calls, with ngrok tunneling for external access.
+A robust RESTful API service built with TypeScript and Express.js that provides access to Firebird databases. This project allows seamless interaction with your Firebird database using standard HTTP methods.
 
-## 🚀 Quick Start
+## 🚀 Features
 
-1. Clone and setup:
+- **TypeScript**: Written in TypeScript for type safety and better maintainability.
+- **Firebird Integration**: Efficient connection pooling with `node-firebird`.
+- **RESTful Endpoints**: CRUD operations for `PERSON`, `MTSMTR` (Medical Treatment Records), and `MTSWAIT` (Waiting List).
+- **Swagger Documentation**: Interactive API documentation available at `/api-docs`.
+- **Security**: Implements `helmet` for security headers and `cors` for cross-origin resource sharing.
+- **Logging**: Structured logging using `winston`.
+
+## 📋 Prerequisites
+
+- **Node.js**: v14 or higher (v20+ recommended).
+- **Firebird Database**: Firebird 2.5 or higher.
+- **Network**: Access to the machine hosting the Firebird database (ensure port 3050 is open).
+
+## 🛠️ Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/hanyusok/firebird-restapi.git
+    cd firebird-restapi
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment:**
+    Create a `.env` file in the root directory. You can use the example below:
+
+    ```env
+    # Server Configuration
+    PORT=3000
+    CORS_ORIGIN=*
+
+    # Firebird Database Configuration
+    FIREBIRD_HOST=192.168.0.12  # IP of the Firebird server
+    FIREBIRD_PORT=3050
+    FIREBIRD_USER=SYSDBA
+    FIREBIRD_PASSWORD=masterkey
+
+    # Database Paths (Local paths on the Firebird server)
+    FIREBIRD_PERSON_DATABASE=C:\Mts3\Db\MTSDB.FDB
+    FIREBIRD_MTSWAIT_DATABASE=C:\Mts3\Db\MTSWAIT.FDB
+    FIREBIRD_MTSMTR_DATABASE=C:\Mts3\Db\MTSMTR.FDB
+    ```
+
+## 🏃‍♂️ Usage
+
+### Development Mode
+Runs the server with `nodemon` and `ts-node` for hot-reloading.
 ```bash
-git clone [repository-url]
-cd firebird-restapi
-npm install
+npm run dev
 ```
 
-2. Create a `.env` file with your configuration:
-```env
-# API Configuration
-PORT=3000
-CORS_ORIGIN=http://localhost:3000
-
-# Firebird Configuration
-FIREBIRD_HOST=localhost
-FIREBIRD_PORT=3050
-FIREBIRD_PERSON_DATABASE=C:\path\to\your\PERSON.FDB
-FIREBIRD_MTSWAIT_DATABASE=C:\path\to\your\MTSWAIT.FDB
-FIREBIRD_MTSMTR_DATABASE=C:\path\to\your\MTSMTR.FDB
-FIREBIRD_USER=your_username
-FIREBIRD_PASSWORD=your_password
-
-# ngrok Configuration
-NGROK_AUTHTOKEN=your_ngrok_authtoken
-NGROK_DOMAIN=your.ngrok.domain
-```
-
-3. Start the API server:
+### Production Build
+Compiles the TypeScript code to JavaScript in the `dist/` directory.
 ```bash
-start-api.bat
+npm run build
 ```
 
-This will start:
-- REST API server on port 3000
-- ngrok tunnel for external access
+### Start Production Server
+Runs the compiled JavaScript from the `dist/` directory.
+```bash
+npm start
+```
 
-## Features
+## 📚 API Documentation
 
-- RESTful API endpoints for CRUD operations
-- Secure database access via environment variables
-- **High-performance Firebird connection pooling (pool size 5)**
-- Centralized SQL query templates
-- CORS support
-- Comprehensive error handling and logging
-- Consistent date formatting
-- Automatic ngrok tunnel setup
+Once the server is running, you can access the Swagger UI documentation at:
 
-## Project Structure
+**[http://localhost:3000/api-docs](http://localhost:3000/api-docs)**
+
+This interactive interface allows you to test endpoints directly from the browser.
+
+## 📂 Project Structure
 
 ```
 firebird-restapi/
-├── config/         # Configuration files
-├── logs/          # Application logs
-├── routes/        # API route definitions
-├── services/      # Business logic and database services
-├── utils/         # Utility functions and helpers
-├── server.js      # Main application entry point
-├── start-api.bat  # Startup script
-└── package.json   # Project dependencies and scripts
+├── dist/               # Compiled JavaScript (generated)
+├── docs/               # Documentation files (DDL, etc.)
+├── scripts/            # Helper scripts (e.g., deploy.bat)
+├── src/                # Source Code
+│   ├── config/         # Database and Swagger config
+│   ├── middleware/     # Express middleware (validation, errors)
+│   ├── routes/         # API Route definitions
+│   ├── schemas/        # Joi validation schemas
+│   ├── services/       # Business logic and DB queries
+│   ├── utils/          # Helper functions (logging, formatting)
+│   ├── app.ts          # App setup
+│   └── server.ts       # Entry point
+├── .env                # Environment variables
+├── package.json        # Dependencies and scripts
+└── tsconfig.json       # TypeScript configuration
 ```
 
-## Architecture
+## 📝 Scripts
 
-- **Connection Pooling:** All Firebird database access uses connection pooling (pool size 5) via `node-firebird`
-- **Centralized SQL Templates:** All SQL queries are defined in `services/sqlQueries.js`
-- **Standardized Error Handling:** All routes use a centralized logger (`winston`)
-- **Consistent Date Formatting:** Handled by `convertToLocalTime` in `utils/koreanUtils.js`
-- **ngrok Integration:** Automatic tunnel setup with custom domain support
+- `npm run dev`: Start in development mode.
+- `npm run build`: Compile TypeScript to JavaScript.
+- `npm start`: Start the production server.
+- `npm run typecheck`: Run TypeScript type checking without emitting files.
 
-## Prerequisites
-
-- Node.js (v14 or higher)
-- Firebird 2.5 or higher
-- Windows OS
-- ngrok account with authtoken
-
-## Environment Variables
-
-Required environment variables in `.env`:
-
-```env
-# API Configuration
-PORT=3000
-CORS_ORIGIN=http://localhost:3000
-
-# Firebird Configuration
-FIREBIRD_HOST=localhost
-FIREBIRD_PORT=3050
-FIREBIRD_PERSON_DATABASE=C:\path\to\your\PERSON.FDB
-FIREBIRD_MTSWAIT_DATABASE=C:\path\to\your\MTSWAIT.FDB
-FIREBIRD_MTSMTR_DATABASE=C:\path\to\your\MTSMTR.FDB
-FIREBIRD_USER=your_username
-FIREBIRD_PASSWORD=your_password
-
-# ngrok Configuration
-NGROK_AUTHTOKEN=your_ngrok_authtoken
-NGROK_DOMAIN=your.ngrok.domain
-```
-
-## Starting the Application
-
-The application can be started using the provided batch file:
-
-1. Run the startup script:
-```bash
-start-api.bat
-```
-
-2. The script will:
-   - Change to the correct directory
-   - Start the API server
-   - Initialize the ngrok tunnel
-   - Minimize the command window
-
-## ngrok Tunnel
-
-The application automatically configures an ngrok tunnel with:
-- Custom domain support
-- Persistent connections
-- Secure authentication
-- Automatic reconnection
-
-Current Configuration:
-- Domain: prompt-liberal-vulture.ngrok-free.app
-- Region: US
-- Port: 3000
-
-## API Endpoints
-
-See the [API Endpoints section above](#api-endpoints) for details on `/api/persons` and other routes.
-
-## Error Handling
-
-- Standardized error responses with HTTP status codes
-- Centralized error logging
-- Logs stored in the logs directory
-
-## Security
-
-- Environment variables for sensitive information
-- CORS restrictions
-- Input validation and sanitization
-- Secure tunnel configuration
-
-## Logging
-
-- Uses Winston for logging
-- Logs stored in `logs/` directory
-- Structured logging format
-
-## Troubleshooting
-
-1. Database Connection Issues:
-   - Verify database paths in `.env`
-   - Check Firebird service is running
-   - Ensure database files are accessible
-
-2. ngrok Tunnel Issues:
-   - Verify NGROK_AUTHTOKEN is correct
-   - Check for conflicting tunnel sessions
-   - Review ngrok logs
-
-3. API Server Issues:
-   - Check application logs in logs directory
-   - Verify environment variables
-   - Ensure ports are not in use
-
-## License
+## 📄 License
 
 MIT License
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
-
-## Contact
-
-For questions or support, open an issue or contact the maintainer.
