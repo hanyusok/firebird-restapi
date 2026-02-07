@@ -9,9 +9,9 @@ backend/dist/
 frontend/.next/
 
 # Environment variables
-.env
-backend/.env
-frontend/.env.local
+# .env
+# backend/.env
+# frontend/.env.local
 
 # Logs
 logs/
