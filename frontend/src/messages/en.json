@@ -28,23 +28,68 @@
         "email": "Email",
         "phone": "Phone",
         "list": "Person List",
-        "noRecords": "No persons found"
+        "description": "Search and view person records from the Firebird database.",
+        "searchPlaceholder": "Search by name...",
+        "birthdatePlaceholder": "Birthdate",
+        "noRecords": "No persons found",
+        "table": {
+            "pcode": "PCODE",
+            "name": "Name",
+            "birthdate": "Birthdate",
+            "gubun": "GUBUN",
+            "lastCheck": "Last Check",
+            "action": "Action"
+        },
+        "register": "Register",
+        "registerConfirm": "Register {name} (PCODE: {pcode}) for today?",
+        "alreadyRegistered": "{name} is already registered for today ({date})",
+        "registerSuccess": "Registered successfully!",
+        "registerFailed": "Registration failed: {error}",
+        "showingPage": "Showing page <bold>{page}</bold> of <bold>{totalPages}</bold>",
+        "previous": "Previous",
+        "next": "Next"
     },
     "wait": {
-        "title": "Waiting List",
-        "add": "Add to Wait List",
-        "edit": "Edit Wait Entry",
-        "delete": "Delete Wait Entry",
-        "list": "Wait List",
-        "noRecords": "No waiting list entries found"
+        "title": "Waiting List (MTSWAIT)",
+        "backToDashboard": "Back to Dashboard",
+        "selectDate": "Select Date",
+        "total": "Total: {count} patient(s) waiting",
+        "noRecordsDate": "No records found for {date}",
+        "table": {
+            "pcode": "PCODE",
+            "name": "Name",
+            "resid1": "Res ID 1",
+            "resid2": "Res ID 2",
+            "visidate": "Visit Date",
+            "actions": "Actions"
+        },
+        "deleteConfirm": "Are you sure you want to remove this patient from the waiting list?",
+        "updateSuccess": "Record updated successfully!",
+        "updateFailed": "Update failed: {error}",
+        "deleteSuccess": "Record deleted successfully!",
+        "deleteFailed": "Delete failed: {error}"
     },
     "treatment": {
-        "title": "Treatment Records",
-        "add": "Add Treatment Record",
-        "edit": "Edit Treatment Record",
-        "delete": "Delete Treatment Record",
-        "list": "Treatment Record List",
-        "noRecords": "No treatment records found"
+        "title": "Treatment Records (MTSMTR)",
+        "backToDashboard": "Back to Dashboard",
+        "selectDate": "Select Date",
+        "total": "Total: {count} record(s)",
+        "noRecordsDate": "No records found for {date}",
+        "table": {
+            "pcode": "PCODE",
+            "name": "Name",
+            "birth": "Birth",
+            "age": "Age",
+            "sex": "Sex",
+            "visitTime": "Visit Time",
+            "type": "Type",
+            "actions": "Actions"
+        },
+        "deleteConfirm": "Are you sure you want to delete this record?",
+        "updateSuccess": "Record updated successfully!",
+        "updateFailed": "Update failed: {error}",
+        "deleteSuccess": "Record deleted successfully!",
+        "deleteFailed": "Delete failed: {error}"
     },
     "actions": {
         "save": "Save",

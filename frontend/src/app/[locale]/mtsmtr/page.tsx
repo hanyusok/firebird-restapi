@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Trash2, Edit, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface MtrItem {
     '#'?: number;
@@ -22,6 +23,9 @@ interface MtrItem {
 }
 
 export default function MtsmtrPage() {
+    const t = useTranslations('treatment');
+    const tActions = useTranslations('actions');
+
     // Get today's date in YYYY-MM-DD format
     const getTodayDate = () => {
         const today = new Date();
@@ -91,16 +95,16 @@ export default function MtsmtrPage() {
                 throw new Error('Failed to update record');
             }
 
-            alert('Record updated successfully!');
+            alert(t('updateSuccess'));
             setEditingId(null);
             fetchMtrList(date);
         } catch (err: any) {
-            alert('Update failed: ' + err.message);
+            alert(t('updateFailed', { error: err.message }));
         }
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this record?')) return;
+        if (!confirm(t('deleteConfirm'))) return;
 
         try {
             const response = await fetch(`http://localhost:3000/api/mtsmtr/${id}/${date}`, {
@@ -111,10 +115,10 @@ export default function MtsmtrPage() {
                 throw new Error('Failed to delete record');
             }
 
-            alert('Record deleted successfully!');
+            alert(t('deleteSuccess'));
             fetchMtrList(date);
         } catch (err: any) {
-            alert('Delete failed: ' + err.message);
+            alert(t('deleteFailed', { error: err.message }));
         }
     };
 
@@ -134,15 +138,15 @@ export default function MtsmtrPage() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-semibold text-gray-900">Treatment Records (MTSMTR)</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">{t('title')}</h1>
                     <Link href="/" className="text-blue-600 hover:text-blue-800">
-                        &larr; Back to Dashboard
+                        &larr; {t('backToDashboard')}
                     </Link>
                 </div>
 
                 <div className="mb-6 bg-white p-4 rounded-lg shadow">
                     <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Date
+                        {t('selectDate')}
                     </label>
                     <input
                         type="date"
@@ -159,13 +163,13 @@ export default function MtsmtrPage() {
                 {error && <div className="text-red-500 mb-4">{error}</div>}
 
                 {!loading && !error && mtrList.length === 0 && (
-                    <div className="text-gray-500 italic">No records found for {date}</div>
+                    <div className="text-gray-500 italic">{t('noRecordsDate', { date })}</div>
                 )}
 
                 {!loading && !error && mtrList.length > 0 && (
                     <div className="flex flex-col">
                         <div className="text-sm text-gray-600 mb-2">
-                            Total: {mtrList.length} record(s)
+                            {t('total', { count: mtrList.length })}
                         </div>
                         <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -174,28 +178,28 @@ export default function MtsmtrPage() {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    PCODE
+                                                    {t('table.pcode')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Name
+                                                    {t('table.name')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Birth
+                                                    {t('table.birth')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Age
+                                                    {t('table.age')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Sex
+                                                    {t('table.sex')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Visit Time
+                                                    {t('table.visitTime')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Type
+                                                    {t('table.type')}
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Actions
+                                                    {t('table.actions')}
                                                 </th>
                                             </tr>
                                         </thead>
@@ -268,13 +272,13 @@ export default function MtsmtrPage() {
                                                                     onClick={() => handleSaveEdit(item['#'] || 0)}
                                                                     className="text-green-600 hover:text-green-900"
                                                                 >
-                                                                    Save
+                                                                    {tActions('save')}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => setEditingId(null)}
                                                                     className="text-gray-600 hover:text-gray-900"
                                                                 >
-                                                                    Cancel
+                                                                    {tActions('cancel')}
                                                                 </button>
                                                             </div>
                                                         ) : (
@@ -282,14 +286,14 @@ export default function MtsmtrPage() {
                                                                 <button
                                                                     onClick={() => handleEdit(item)}
                                                                     className="text-blue-600 hover:text-blue-900"
-                                                                    title="Edit"
+                                                                    title={tActions('edit')}
                                                                 >
                                                                     <Edit className="h-4 w-4" />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDelete(item['#'] || 0)}
                                                                     className="text-red-600 hover:text-red-900"
-                                                                    title="Delete"
+                                                                    title={tActions('delete')}
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </button>

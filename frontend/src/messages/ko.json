@@ -28,23 +28,68 @@
         "email": "이메일",
         "phone": "전화번호",
         "list": "사용자 목록",
-        "noRecords": "사용자를 찾을 수 없습니다"
+        "description": "Firebird 데이터베이스의 사용자 기록을 검색하고 조회합니다.",
+        "searchPlaceholder": "이름으로 검색...",
+        "birthdatePlaceholder": "생년월일",
+        "noRecords": "사용자를 찾을 수 없습니다",
+        "table": {
+            "pcode": "PCODE",
+            "name": "이름",
+            "birthdate": "생년월일",
+            "gubun": "구분",
+            "lastCheck": "마지막 확인",
+            "action": "작업"
+        },
+        "register": "접수",
+        "registerConfirm": "오늘 {name} (PCODE: {pcode})님을 접수하시겠습니까?",
+        "alreadyRegistered": "{name}님은 오늘({date}) 이미 접수되었습니다.",
+        "registerSuccess": "접수가 완료되었습니다!",
+        "registerFailed": "접수 실패: {error}",
+        "showingPage": "<bold>{totalPages}</bold> 페이지 중 <bold>{page}</bold> 페이지 표시",
+        "previous": "이전",
+        "next": "다음"
     },
     "wait": {
-        "title": "대기 목록",
-        "add": "대기 목록 추가",
-        "edit": "대기 항목 편집",
-        "delete": "대기 항목 삭제",
-        "list": "대기 목록",
-        "noRecords": "대기 목록 항목을 찾을 수 없습니다"
+        "title": "대기 목록 (MTSWAIT)",
+        "backToDashboard": "대시보드로 돌아가기",
+        "selectDate": "날짜 선택",
+        "total": "총: {count}명의 대기 환자",
+        "noRecordsDate": "{date}에 대한 기록이 없습니다",
+        "table": {
+            "pcode": "PCODE",
+            "name": "이름",
+            "resid1": "주민번호1",
+            "resid2": "주민번호2",
+            "visidate": "방문일자",
+            "actions": "작업"
+        },
+        "deleteConfirm": "이 환자를 대기 목록에서 삭제하시겠습니까?",
+        "updateSuccess": "기록이 성공적으로 업데이트되었습니다!",
+        "updateFailed": "업데이트 실패: {error}",
+        "deleteSuccess": "기록이 성공적으로 삭제되었습니다!",
+        "deleteFailed": "삭제 실패: {error}"
     },
     "treatment": {
-        "title": "치료 기록",
-        "add": "치료 기록 추가",
-        "edit": "치료 기록 편집",
-        "delete": "치료 기록 삭제",
-        "list": "치료 기록 목록",
-        "noRecords": "치료 기록을 찾을 수 없습니다"
+        "title": "치료 기록 (MTSMTR)",
+        "backToDashboard": "대시보드로 돌아가기",
+        "selectDate": "날짜 선택",
+        "total": "총: {count}건의 기록",
+        "noRecordsDate": "{date}에 대한 기록이 없습니다",
+        "table": {
+            "pcode": "PCODE",
+            "name": "이름",
+            "birth": "생년월일",
+            "age": "나이",
+            "sex": "성별",
+            "visitTime": "방문시간",
+            "type": "구분",
+            "actions": "작업"
+        },
+        "deleteConfirm": "이 기록을 삭제하시겠습니까?",
+        "updateSuccess": "기록이 성공적으로 업데이트되었습니다!",
+        "updateFailed": "업데이트 실패: {error}",
+        "deleteSuccess": "기록이 성공적으로 삭제되었습니다!",
+        "deleteFailed": "삭제 실패: {error}"
     },
     "actions": {
         "save": "저장",
