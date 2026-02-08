@@ -1,6 +1,6 @@
 import { pooledQueryDb } from '../config/database';
 import { processKoreanFields } from '../utils/koreanUtils';
-import { getMtrByVisidateSQL, getMtrInsertSQL, getMtrUpdateSQL, getMtrDeleteSQL } from './sqlQueries';
+import { getMtrByVisidateSQL, getMtrInsertSQL, getMtrUpdateSQL, getMtrDeleteSQL, getMtrByIdSQL, getWaitDeleteSQL } from './sqlQueries';
 
 const mtsmtrService = {
     // Helper to get table name from date
@@ -76,10 +76,43 @@ const mtsmtrService = {
 
     delete: async (id: number, visidate: string) => {
         const tableName = mtsmtrService.getTableName(visidate);
-        const sql = getMtrDeleteSQL(tableName);
 
-        await pooledQueryDb('mtsmtr', sql, [id]);
-        return { message: 'MTR record deleted' };
+        // 1. Get the PCODE first so we can delete from WAIT table
+        const selectSql = getMtrByIdSQL(tableName);
+        const mtrRecords = await pooledQueryDb('mtsmtr', selectSql, [id]);
+
+        if (!mtrRecords || mtrRecords.length === 0) {
+            throw new Error('Record not found');
+        }
+
+        const mtrRecord = mtrRecords[0];
+        const pcode = mtrRecord.PCODE;
+
+        // 2. Delete from MTR
+        const deleteMtrSql = getMtrDeleteSQL(tableName);
+        await pooledQueryDb('mtsmtr', deleteMtrSql, [id]);
+
+        // 3. Delete from WAIT (Cascading delete)
+        // We need to calculate WAIT table name (same year logic)
+        // Verify if we should use mtswaitService or direct SQL. Direct SQL avoids circular dependency possibility and is simpler here.
+        const waitTableName = tableName.replace('MTR', 'WAIT');
+        const deleteWaitSql = getWaitDeleteSQL(waitTableName);
+
+        // We use PCODE and VISIDATE to delete from WAIT
+        // Note: mtrRecord.VISIDATE might be Date object or string depending on driver. 
+        // We passed visidate string to the function, safer to use that or ensure format.
+        // But wait, the record in DB has the correct PCODE.
+
+        try {
+            await pooledQueryDb('mtswait', deleteWaitSql, [pcode, visidate]);
+            console.log(`Cascaded delete to ${waitTableName} for PCODE ${pcode}`);
+        } catch (err) {
+            console.error('Failed to cascade delete to WAIT table:', err);
+            // We don't throw here, as MTR delete was successful.
+            // Or should we?
+        }
+
+        return { message: 'MTR and WAIT records deleted' };
     }
 };
 

@@ -5,7 +5,8 @@ import {
   getWaitByVisidateSQL,
   getWaitInsertSQL,
   getWaitUpdateSQL,
-  getWaitDeleteSQL
+  getWaitDeleteSQL,
+  getMtrDeleteByPcodeVisidateSQL
 } from './sqlQueries';
 
 const mtswaitService = {
@@ -265,10 +266,26 @@ const mtswaitService = {
   },
 
   // Delete
+  // Delete
   delete: async (pcode: number | string, visidate: string) => {
     const tableName = mtswaitService.getTableName(visidate);
     const sql = getWaitDeleteSQL(tableName);
-    return await pooledQueryDb('mtswait', sql, [pcode, visidate]);
+
+    await pooledQueryDb('mtswait', sql, [pcode, visidate]);
+
+    // Cascading delete to MTR table
+    const mtrTableName = tableName.replace('WAIT', 'MTR');
+    const mtrDeleteSql = getMtrDeleteByPcodeVisidateSQL(mtrTableName);
+
+    try {
+      await pooledQueryDb('mtsmtr', mtrDeleteSql, [pcode, visidate]);
+      console.log(`Cascaded delete to ${mtrTableName} for PCODE ${pcode}`);
+    } catch (err) {
+      console.error('Failed to cascade delete to MTR table:', err);
+      // Log but don't fail as WAIT delete succeeded
+    }
+
+    return { message: 'Wait record deleted (and cascaded to MTR)' };
   },
 };
 

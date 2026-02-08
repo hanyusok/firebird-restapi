@@ -17,6 +17,8 @@ export const getMtrAllSQL = (tableName: string = 'MTR2025'): string => `${getMtr
 export const getMtrInsertSQL = (tableName: string = 'MTR2025'): string => `INSERT INTO ${tableName} ("#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN) VALUES (GEN_ID(GEN_${tableName}_SEQ, 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 export const getMtrUpdateSQL = (tableName: string = 'MTR2025'): string => `UPDATE ${tableName} SET VISITIME = ?, PNAME = ?, PBIRTH = ?, AGE = ?, PHONENUM = ?, SEX = ?, GUBUN = ? WHERE "#" = ?`;
 export const getMtrDeleteSQL = (tableName: string = 'MTR2025'): string => `DELETE FROM ${tableName} WHERE "#" = ?`;
+export const getMtrDeleteByPcodeVisidateSQL = (tableName: string = 'MTR2025'): string => `DELETE FROM ${tableName} WHERE PCODE = ? AND VISIDATE = ?`;
+export const getMtrByIdSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} WHERE "#" = ?`;
 
 // WAIT tables (Dynamic table name)
 // Updated: WAIT2026 does not store PNAME. We must join with PERSON table or fetch separately.
