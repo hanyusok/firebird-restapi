@@ -156,12 +156,16 @@ const mtswaitService = {
     if (person.PBIRTH) {
       const birthParams = new Date(person.PBIRTH);
       const today = new Date();
-      let ageNum = today.getFullYear() - birthParams.getFullYear();
-      const m = today.getMonth() - birthParams.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthParams.getDate())) {
-        ageNum--;
+
+      let months = (today.getFullYear() - birthParams.getFullYear()) * 12 + (today.getMonth() - birthParams.getMonth());
+      if (today.getDate() < birthParams.getDate()) {
+        months--;
       }
-      age = ageNum.toString();
+
+      const y = Math.floor(months / 12);
+      const m = months % 12;
+
+      age = `${y}y ${m}m`;
     }
 
     // Prepare MTR params

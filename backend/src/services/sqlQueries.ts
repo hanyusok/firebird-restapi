@@ -9,7 +9,7 @@ export const getPaginatedSelectSQL = (): string => `SELECT FIRST ? SKIP ? ${base
 export const getCountSQL = (): string => 'SELECT COUNT(*) as total FROM PERSON';
 
 // MTR2025 table fields and queries
-export const mtrSelectFields = 'PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN';
+export const mtrSelectFields = '"#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN';
 export const getMtrSelectSQL = (tableName: string = 'MTR2025'): string => `SELECT ${mtrSelectFields} FROM ${tableName}`;
 export const getMtrByPcodeSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} WHERE PCODE = ? ORDER BY VISIDATE DESC, VISITIME DESC`;
 export const getMtrByVisidateSQL = (tableName: string = 'MTR2025'): string => `${getMtrSelectSQL(tableName)} WHERE VISIDATE = ? ORDER BY VISITIME`;
