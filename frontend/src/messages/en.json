@@ -1,0 +1,67 @@
+{
+    "common": {
+        "appTitle": "Firebird REST API Frontend",
+        "appDescription": "Manage Firebird Database Records"
+    },
+    "nav": {
+        "home": "Home",
+        "persons": "Persons",
+        "waitingList": "Waiting List",
+        "treatmentRecords": "Treatment Records"
+    },
+    "home": {
+        "title": "System Dashboard",
+        "description": "Overview of the Firebird REST API System",
+        "managePersons": "Manage Persons",
+        "waitingList": "Waiting List",
+        "treatmentRecords": "Treatment Records",
+        "viewList": "View List",
+        "viewWaitList": "View Wait List",
+        "viewRecords": "View Records"
+    },
+    "persons": {
+        "title": "Person Management",
+        "add": "Add Person",
+        "edit": "Edit Person",
+        "delete": "Delete Person",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "list": "Person List",
+        "noRecords": "No persons found"
+    },
+    "wait": {
+        "title": "Waiting List",
+        "add": "Add to Wait List",
+        "edit": "Edit Wait Entry",
+        "delete": "Delete Wait Entry",
+        "list": "Wait List",
+        "noRecords": "No waiting list entries found"
+    },
+    "treatment": {
+        "title": "Treatment Records",
+        "add": "Add Treatment Record",
+        "edit": "Edit Treatment Record",
+        "delete": "Delete Treatment Record",
+        "list": "Treatment Record List",
+        "noRecords": "No treatment records found"
+    },
+    "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete",
+        "add": "Add",
+        "search": "Search",
+        "filter": "Filter",
+        "submit": "Submit",
+        "close": "Close",
+        "confirm": "Confirm"
+    },
+    "messages": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Operation successful",
+        "confirmDelete": "Are you sure you want to delete this item?"
+    }
+}

@@ -1,16 +1,19 @@
 import Link from 'next/link';
 import { Users, Calendar, Activity } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function Home() {
+  const t = useTranslations('home');
+
   return (
     <div className="space-y-6">
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
-            System Dashboard
+            {t('title')}
           </h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Overview of the Firebird REST API System
+            {t('description')}
           </p>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
@@ -24,12 +27,12 @@ export default function Home() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Manage Persons
+                        {t('managePersons')}
                       </dt>
                       <dd>
                         <div className="text-lg font-medium text-gray-900">
                           <Link href="/persons" className="text-blue-600 hover:text-blue-500">
-                            View List &rarr;
+                            {t('viewList')} &rarr;
                           </Link>
                         </div>
                       </dd>
@@ -48,12 +51,12 @@ export default function Home() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Waiting List
+                        {t('waitingList')}
                       </dt>
                       <dd>
                         <div className="text-lg font-medium text-gray-900">
                           <Link href="/mtswait" className="text-green-600 hover:text-green-500">
-                            View Wait List &rarr;
+                            {t('viewWaitList')} &rarr;
                           </Link>
                         </div>
                       </dd>
@@ -72,12 +75,12 @@ export default function Home() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Treatment Records
+                        {t('treatmentRecords')}
                       </dt>
                       <dd>
                         <div className="text-lg font-medium text-gray-900">
                           <Link href="/mtsmtr" className="text-purple-600 hover:text-purple-500">
-                            View Records &rarr;
+                            {t('viewRecords')} &rarr;
                           </Link>
                         </div>
                       </dd>
