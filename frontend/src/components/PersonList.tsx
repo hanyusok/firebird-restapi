@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { Person, PaginatedResponse } from '@/types';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import Modal from './Modal';
 
 export default function PersonList() {
     const t = useTranslations('persons');
@@ -12,36 +13,46 @@ export default function PersonList() {
     const tMsg = useTranslations('messages');
 
     const [persons, setPersons] = useState<Person[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [birthDate, setBirthDate] = useState('');
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+    const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
     const fetchPersons = async () => {
         setLoading(true);
         try {
             if (searchTerm || birthDate) {
-                // Use search endpoint
-                const params: any = {};
-                if (searchTerm) params.pname = searchTerm;
-                if (birthDate) params.pbirth = birthDate;
+                // Require both name and birthdate for search
+                if (searchTerm && birthDate && birthDate.length === 8) {
+                    // Use search endpoint
+                    const params: any = {};
+                    params.pname = searchTerm;
 
-                const response = await api.get<Person[]>(`/persons/search`, {
-                    params
-                });
-                setPersons(response.data);
-                setTotalPages(1); // Search endpoint doesn't return pagination yet
-                setTotalItems(response.data.length);
+                    // Format YYYYMMDD to YYYY-MM-DD for backend
+                    params.pbirth = `${birthDate.substring(0, 4)}-${birthDate.substring(4, 6)}-${birthDate.substring(6, 8)}`;
+
+                    const response = await api.get<Person[]>(`/persons/search`, {
+                        params
+                    });
+                    setPersons(response.data);
+                    setTotalPages(1); // Search endpoint doesn't return pagination yet
+                    setTotalItems(response.data.length);
+                } else {
+                    // One is missing - clear list or handle as desired
+                    setPersons([]);
+                    setTotalPages(1);
+                    setTotalItems(0);
+                }
             } else {
-                // Use list endpoint
-                const response = await api.get<PaginatedResponse<Person>>('/persons', {
-                    params: { page, limit: 10 }
-                });
-                setPersons(response.data.data);
-                setTotalPages(response.data.pagination.totalPages);
-                setTotalItems(response.data.pagination.total);
+                // No search terms - clear list
+                setPersons([]);
+                setTotalPages(1);
+                setTotalItems(0);
+                setLoading(false);
             }
         } catch (error) {
             console.error('Failed to fetch persons:', error);
@@ -58,8 +69,14 @@ export default function PersonList() {
         return () => clearTimeout(timer);
     }, [page, searchTerm, birthDate]);
 
-    const handleRegister = async (person: Person) => {
-        if (!confirm(t('registerConfirm', { name: person.PNAME || '', pcode: person.PCODE }))) return;
+    const handleRegister = (person: Person) => {
+        setSelectedPerson(person);
+        setIsRegisterModalOpen(true);
+    };
+
+    const confirmRegistration = async () => {
+        if (!selectedPerson) return;
+        const person = selectedPerson;
 
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -81,6 +98,7 @@ export default function PersonList() {
 
                     if (alreadyRegistered) {
                         alert(t('alreadyRegistered', { name: person.PNAME || '', date: visidate }));
+                        setIsRegisterModalOpen(false);
                         return;
                     }
                 }
@@ -97,6 +115,7 @@ export default function PersonList() {
                 VISIDATE: visidate
             });
             alert(t('registerSuccess'));
+            setIsRegisterModalOpen(false);
         } catch (error: any) {
             console.error('Registration failed:', error);
             const errorMessage = error.response?.data?.message || error.message;
@@ -107,6 +126,7 @@ export default function PersonList() {
             } else {
                 alert(t('registerFailed', { error: errorMessage }));
             }
+            setIsRegisterModalOpen(false);
         }
     };
 
@@ -132,12 +152,14 @@ export default function PersonList() {
                     </div>
                     <div className="relative">
                         <input
-                            type="date"
+                            type="text"
                             placeholder={t('birthdatePlaceholder')}
                             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={birthDate}
+                            maxLength={8}
                             onChange={(e) => {
-                                setBirthDate(e.target.value);
+                                const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
+                                setBirthDate(value);
                                 setPage(1);
                             }}
                         />
@@ -150,9 +172,7 @@ export default function PersonList() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('table.pcode')}
-                                </th>
+
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {t('table.name')}
                                 </th>
@@ -186,9 +206,7 @@ export default function PersonList() {
                             ) : (
                                 persons.map((person) => (
                                     <tr key={person.PCODE} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {person.PCODE}
-                                        </td>
+
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {person.PNAME}
                                         </td>
@@ -270,6 +288,32 @@ export default function PersonList() {
                     </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={isRegisterModalOpen}
+                onClose={() => setIsRegisterModalOpen(false)}
+                title="마트의원"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setIsRegisterModalOpen(false)}
+                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                        >
+                            {tActions('cancel') || 'Cancel'}
+                        </button>
+                        <button
+                            onClick={confirmRegistration}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        >
+                            {tActions('confirm') || 'Confirm'}
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-gray-700">
+                    {selectedPerson && t('registerConfirm', { name: selectedPerson.PNAME || '' })}
+                </p>
+            </Modal>
         </div>
     );
 }

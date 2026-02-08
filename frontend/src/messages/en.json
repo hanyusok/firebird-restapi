@@ -30,8 +30,8 @@
         "list": "Person List",
         "description": "Search and view person records from the Firebird database.",
         "searchPlaceholder": "Search by name...",
-        "birthdatePlaceholder": "Birthdate",
-        "noRecords": "No persons found",
+        "birthdatePlaceholder": "YYYYMMDD",
+        "noRecords": "No persons found (Please provide both Name and Birthdate to search)",
         "table": {
             "pcode": "PCODE",
             "name": "Name",
@@ -41,7 +41,7 @@
             "action": "Action"
         },
         "register": "Register",
-        "registerConfirm": "Register {name} (PCODE: {pcode}) for today?",
+        "registerConfirm": "Do you want to register {name} for today?",
         "alreadyRegistered": "{name} is already registered for today ({date})",
         "registerSuccess": "Registered successfully!",
         "registerFailed": "Registration failed: {error}",
