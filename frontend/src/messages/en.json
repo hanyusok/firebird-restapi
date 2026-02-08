@@ -1,6 +1,6 @@
 {
     "common": {
-        "appTitle": "Firebird REST API Frontend",
+        "appTitle": "Mart Clinic",
         "appDescription": "Manage Firebird Database Records"
     },
     "nav": {

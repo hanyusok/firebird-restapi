@@ -1,7 +1,7 @@
 import express from 'express';
 import personRoutes from './personRoutes';
 import mtswaitRoutes from './mtswaitRoutes';
-import mtrRoutes from './mtrRoutes';
+
 import mtsmtrRoutes from './mtsmtrRoutes';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
 // Combine all routes
 router.use('/api', personRoutes);
 router.use('/api/mtswait', mtswaitRoutes);
-router.use('/api/mtr', mtrRoutes);
+
 router.use('/api/mtsmtr', mtsmtrRoutes);
 
 export default router;
