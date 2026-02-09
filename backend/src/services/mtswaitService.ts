@@ -191,11 +191,11 @@ const mtswaitService = {
         INSERT INTO ${mtrTableName} (
             "#", PCODE, VISIDATE, VISITIME, 
             PNAME, PBIRTH, AGE, PHONENUM, SEX, 
-            SERIAL, N, GUBUN, RESERVED, FIN
+            SERIAL, N, GUBUN, RESERVED, FIN, TEMPERATUR
         ) VALUES (
             GEN_ID(GEN_${mtrTableName}_SEQ, 1), ?, ?, ?, 
             ?, ?, ?, ?, ?, 
-            1, 0, ?, '', ''
+            1, 0, ?, 'R', '', ?
         )
     `;
 
@@ -219,7 +219,8 @@ const mtswaitService = {
       age,
       phone,           // Empty string
       sex,             // Pass string, connection handles encoding
-      gubun            // Pass string, connection handles encoding
+      gubun,           // Pass string, connection handles encoding
+      '36.5'           // Default temperature value
     ];
 
     try {

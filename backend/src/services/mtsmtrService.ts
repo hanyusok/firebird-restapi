@@ -47,8 +47,9 @@ const mtsmtrService = {
             data.SERIAL || 1,
             data.N || 0,
             data.GUBUN || '요양',
-            data.RESERVED || '',
-            data.FIN || ''
+            data.RESERVED || 'R',
+            data.FIN || '',
+            data.TEMPERATUR || '36.5'  // Default temperature value
         ];
 
         await pooledQueryDb('mtsmtr', sql, params);
@@ -67,6 +68,7 @@ const mtsmtrService = {
             data.PHONENUM || '',
             data.SEX || '',
             data.GUBUN || '요양',
+            data.TEMPERATUR || '36.5',  // Default temperature value
             id  // "#" column value
         ];
 
