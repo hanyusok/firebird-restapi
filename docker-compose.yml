@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    # If Firebird is running on the NAS host itself and not in docker:
+    # Use extra_hosts to reach the host IP if needed, 
+    # or ensure the .env has the correct accessible IP.
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - BACKEND_URL=http://backend:3000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  frontend-staff:
+    build:
+      context: ./frontend-staff
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - BACKEND_URL=http://backend:3000
+    depends_on:
+      - backend
+    restart: unless-stopped
