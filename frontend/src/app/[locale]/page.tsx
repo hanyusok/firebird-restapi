@@ -14,7 +14,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Compact Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-md">
         <div className="px-6 py-4 text-center">
@@ -27,8 +27,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content - Horizontal Layout (3:1 ratio) - Fill Screen */}
-      <div className="px-4 mt-4 flex gap-4 h-[calc(100vh-120px)]">
+      {/* Main Content - Horizontal Layout (3:1 ratio) - No Margins */}
+      <div className="flex gap-0 h-[calc(100vh-88px)]">
         {/* Person Search Section - 75% width, full height */}
         <div className="flex-[3] flex flex-col">
           <PersonList onRegisterSuccess={handleRegistrationSuccess} />

@@ -90,11 +90,11 @@ export default function WaitingList({ refreshTrigger = 0 }: WaitingListProps) {
                                             {maskedName.charAt(0)}
                                         </span>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 truncate">
+                                    <div className="flex-1 min-w-0 flex items-baseline space-x-2">
+                                        <p className="text-2xl font-bold text-gray-900 truncate">
                                             {maskedName}
                                         </p>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-sm text-gray-500 flex-shrink-0">
                                             {birthYear}
                                         </p>
                                     </div>
