@@ -50,13 +50,19 @@ export default function WaitingList({ refreshTrigger = 0 }: WaitingListProps) {
     if (waitList.length === 0 && !loading) return null;
 
     return (
-        <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {t('waitingList')} ({waitList.length})
+        <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
+            {/* Header - Compact */}
+            <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200 flex-shrink-0">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                    <span className="bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-2">
+                        {waitList.length}
+                    </span>
+                    {t('waitingList')}
                 </h3>
             </div>
-            <ul className="divide-y divide-gray-200">
+
+            {/* List - Full Height Scrolling */}
+            <ul className="divide-y divide-gray-100 overflow-y-auto flex-1">
                 {waitList.map((item) => {
                     // Mask Name Logic
                     let maskedName = item.PNAME;
@@ -64,10 +70,6 @@ export default function WaitingList({ refreshTrigger = 0 }: WaitingListProps) {
                         if (item.PNAME.length === 2) {
                             maskedName = `${item.PNAME[0]}*`;
                         } else {
-                            // For 3 or more characters, keep first and last, mask the middle
-                            // Example: "홍길동" -> "홍*동"
-                            // Example: "남궁길동" -> "남**동" (Simple approach: Start + * + End is usually enough for privacy)
-                            // User asked specifically for "한*석" style.
                             maskedName = `${item.PNAME[0]}*${item.PNAME[item.PNAME.length - 1]}`;
                         }
                     }
@@ -75,27 +77,36 @@ export default function WaitingList({ refreshTrigger = 0 }: WaitingListProps) {
                     // Extract Year Logic
                     let birthYear = '';
                     if (item.PBIRTH) {
-                        // Assuming YYYYMMDD or YYYY-MM-DD
                         birthYear = item.PBIRTH.substring(0, 4);
                     }
 
                     return (
-                        <li key={`${item.PCODE}-${item.VISIDATE}`} className="px-4 py-4 sm:px-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <p className="text-lg font-bold text-gray-900">
-                                        {maskedName}
-                                    </p>
-                                    <div className="text-md text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                        {birthYear}
+                        <li key={`${item.PCODE}-${item.VISIDATE}`} className="px-3 py-3 hover:bg-gray-50 transition-colors">
+                            <div className="flex flex-col space-y-2">
+                                {/* Avatar and Name */}
+                                <div className="flex items-center space-x-2">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span className="text-blue-700 font-bold text-xs">
+                                            {maskedName.charAt(0)}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-gray-900 truncate">
+                                            {maskedName}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {birthYear}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="ml-2 flex-shrink-0 flex">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.JINRYO === '1'
+
+                                {/* Status Badge - Full Width */}
+                                <div className="w-full">
+                                    <span className={`w-full px-2 py-1 inline-flex justify-center text-xs font-semibold rounded ${item.JINRYO === '1'
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-yellow-100 text-yellow-800'
                                         }`}>
-                                        {item.JINRYO === '1' ? 'Completed' : 'Waiting'}
+                                        {item.JINRYO === '1' ? t('statusCompleted') : t('statusWaiting')}
                                     </span>
                                 </div>
                             </div>

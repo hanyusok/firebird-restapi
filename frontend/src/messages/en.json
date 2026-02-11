@@ -17,7 +17,9 @@
         "treatmentRecords": "Treatment Records",
         "viewList": "View List",
         "viewWaitList": "View Wait List",
-        "viewRecords": "View Records"
+        "viewRecords": "View Records",
+        "statusWaiting": "Waiting",
+        "statusCompleted": "Completed"
     },
     "persons": {
         "title": "Person Management",

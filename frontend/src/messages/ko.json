@@ -17,7 +17,9 @@
         "treatmentRecords": "치료 기록",
         "viewList": "목록 보기",
         "viewWaitList": "대기 목록 보기",
-        "viewRecords": "기록 보기"
+        "viewRecords": "기록 보기",
+        "statusWaiting": "대기",
+        "statusCompleted": "완료"
     },
     "persons": {
         "title": "고객 관리",
