@@ -11,8 +11,13 @@ import errorHandler from './middleware/errorHandler';
 
 const app = express();
 
+import path from 'path';
+
 // Security Middleware
 app.use(helmet());
+
+// Serve static files (including favicon.ico)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // CORS (keep existing)
 app.use(cors());

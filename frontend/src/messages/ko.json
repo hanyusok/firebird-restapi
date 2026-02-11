@@ -23,6 +23,7 @@
     },
     "persons": {
         "title": "고객 관리",
+        "searchTitle": "방문 기록 검색",
         "add": "고객 추가",
         "edit": "고객 편집",
         "delete": "고객 삭제",
@@ -43,8 +44,8 @@
             "action": "작업"
         },
         "register": "접수",
-        "registerConfirm": "오늘 {name}님을 접수하시겠습니까?",
-        "alreadyRegistered": "{name}님은 오늘({date}) 이미 접수되었습니다.",
+        "registerConfirm": "접수하시겠습니까?",
+        "alreadyRegistered": "이미 접수되었습니다.",
         "registerSuccess": "접수가 완료되었습니다!",
         "registerFailed": "접수 실패: {error}",
         "showingPage": "<bold>{totalPages}</bold> 페이지 중 <bold>{page}</bold> 페이지 표시",

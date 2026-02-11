@@ -8,13 +8,18 @@ import WaitingList from '@/components/WaitingList';
 export default function Home() {
   const t = useTranslations('home');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [hasWaitItems, setHasWaitItems] = useState(false);
 
   const handleRegistrationSuccess = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const handleWaitListCountChange = (count: number) => {
+    setHasWaitItems(count > 0);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-hidden">
       {/* Compact Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-md">
         <div className="px-6 py-4 text-center">
@@ -27,16 +32,25 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content - Horizontal Layout (3:1 ratio) - No Margins */}
-      <div className="flex gap-0 h-[calc(100vh-88px)]">
-        {/* Person Search Section - 75% width, full height */}
-        <div className="flex-[3] flex flex-col">
+      {/* Main Content - Horizontal Layout with Animation - No Margins */}
+      <div className="flex gap-0 h-[calc(100vh-88px)] w-full">
+        {/* Person Search Section - Expands when waiting list is empty */}
+        <div
+          className={`flex flex-col transition-all duration-700 ease-in-out ${hasWaitItems ? 'flex-[3] w-[75%]' : 'flex-1 w-full'
+            }`}
+        >
           <PersonList onRegisterSuccess={handleRegistrationSuccess} />
         </div>
 
-        {/* Waiting List - 25% width, full height */}
-        <div className="flex-[1] flex flex-col">
-          <WaitingList refreshTrigger={refreshTrigger} />
+        {/* Waiting List - Collapses when empty */}
+        <div
+          className={`flex flex-col transition-all duration-700 ease-in-out overflow-hidden ${hasWaitItems ? 'flex-[1] w-[25%] opacity-100' : 'flex-[0] w-0 opacity-0'
+            }`}
+        >
+          <WaitingList
+            refreshTrigger={refreshTrigger}
+            onCountChange={handleWaitListCountChange}
+          />
         </div>
       </div>
     </div>

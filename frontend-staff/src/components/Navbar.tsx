@@ -8,15 +8,15 @@ const Navbar = () => {
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
                             <Link href="/">
-                                <span className="text-xl font-bold text-blue-600">Mart Clinic Staff</span>
+                                <span className="text-xl font-bold text-blue-600">마트의원 직원용</span>
                             </Link>
                         </div>
                         <div className="ml-6 flex space-x-8">
                             <Link href="/mtswait" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-blue-500">
-                                Waiting List (MTSWAIT)
+                                대기자 명단 (MTSWAIT)
                             </Link>
                             <Link href="/mtsmtr" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-blue-500">
-                                Medical Records (MTSMTR)
+                                진료기록 (MTSMTR)
                             </Link>
                         </div>
                     </div>

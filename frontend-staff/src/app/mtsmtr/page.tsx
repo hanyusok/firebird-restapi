@@ -100,7 +100,7 @@ export default function MtsMtrPage() {
             <div className="md:flex md:items-center md:justify-between">
                 <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                        Medical Records (MTSMTR)
+                        진료기록 (MTSMTR)
                     </h2>
                 </div>
                 <div className="mt-4 flex md:ml-4 md:mt-0">
@@ -115,7 +115,7 @@ export default function MtsMtrPage() {
                         className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                     >
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
+                        새로고침
                     </button>
                 </div>
             </div>
@@ -128,25 +128,25 @@ export default function MtsMtrPage() {
                                 <table className="min-w-full divide-y divide-gray-300">
                                     <thead>
                                         <tr>
-                                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">PCODE</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Birth (Age)</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sex</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type (Gubun)</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Time</th>
+                                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">시간</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">환자코드</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">성명</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">생년월일 (나이)</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">성별</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">구분</th>
                                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                                                <span className="sr-only">Actions</span>
+                                                <span className="sr-only">기능</span>
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
                                         {loading ? (
                                             <tr>
-                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">Loading...</td>
+                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">로딩중...</td>
                                             </tr>
                                         ) : mtrList.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">No medical records found for this date.</td>
+                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">해당 날짜에 진료기록이 없습니다.</td>
                                             </tr>
                                         ) : (
                                             mtrList.map((item) => {
@@ -156,6 +156,9 @@ export default function MtsMtrPage() {
                                                 return (
                                                     <tr key={item['#']}>
                                                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                                                            {visitTime}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                                             {item.PCODE}
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -190,11 +193,13 @@ export default function MtsMtrPage() {
                                                                     onChange={(e) => setEditForm({ ...editForm, SEX: e.target.value })}
                                                                     className="block w-full rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-xs sm:leading-6"
                                                                 >
-                                                                    <option value="M">M</option>
-                                                                    <option value="F">F</option>
+                                                                    <option value="1">남</option>
+                                                                    <option value="2">여</option>
                                                                 </select>
                                                             ) : (
-                                                                item.SEX
+                                                                (item.SEX === '1' || item.SEX === 'M') ? '남' :
+                                                                    (item.SEX === '2' || item.SEX === 'F') ? '여' :
+                                                                        item.SEX
                                                             )}
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -209,23 +214,20 @@ export default function MtsMtrPage() {
                                                                 item.GUBUN
                                                             )}
                                                         </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {visitTime}
-                                                        </td>
                                                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                                                             {isEditing ? (
                                                                 <div className="flex justify-end space-x-2">
                                                                     <button
                                                                         onClick={() => handleSaveEdit(item['#'])}
                                                                         className="text-green-600 hover:text-green-900"
-                                                                        title="Save"
+                                                                        title="저장"
                                                                     >
                                                                         <Save className="h-4 w-4" />
                                                                     </button>
                                                                     <button
                                                                         onClick={handleCancelEdit}
                                                                         className="text-gray-600 hover:text-gray-900"
-                                                                        title="Cancel"
+                                                                        title="취소"
                                                                     >
                                                                         <X className="h-4 w-4" />
                                                                     </button>
@@ -235,14 +237,14 @@ export default function MtsMtrPage() {
                                                                     <button
                                                                         onClick={() => handleEdit(item)}
                                                                         className="text-blue-600 hover:text-blue-900"
-                                                                        title="Edit"
+                                                                        title="수정"
                                                                     >
                                                                         <Pencil className="h-4 w-4" />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDelete(item['#'])}
                                                                         className="text-red-600 hover:text-red-900"
-                                                                        title="Delete"
+                                                                        title="삭제"
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </button>
@@ -262,7 +264,7 @@ export default function MtsMtrPage() {
             </div>
             {mtrList.length > 0 && (
                 <div className="mt-4 text-sm text-gray-500 text-right px-6">
-                    Total: {mtrList.length} record(s) found
+                    총 {mtrList.length} 건의 기록이 있습니다.
                 </div>
             )}
         </div>

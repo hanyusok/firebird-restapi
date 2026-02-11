@@ -20,6 +20,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [birthDate, setBirthDate] = useState('');
+    const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
@@ -29,6 +30,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
             // Privacy: Require BOTH Name and Birthdate (8 digits) to search
             if (!searchTerm || !birthDate || birthDate.length !== 8) {
                 setPersons([]);
+                setIsResultsModalOpen(false);
                 return;
             }
 
@@ -43,6 +45,9 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
                 if (searchTerm || (birthDate && birthDate.length === 8)) {
                     const response = await api.get<Person[]>(`/persons/search`, { params });
                     setPersons(response.data);
+                    if (response.data.length > 0) {
+                        setIsResultsModalOpen(true);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch persons:', error);
@@ -60,6 +65,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
     const handleRegister = (person: Person) => {
         setSelectedPerson(person);
         setIsRegisterModalOpen(true);
+        // We keep results modal open so user can see context or cancel confirmation
     };
 
     const confirmRegistration = async () => {
@@ -98,6 +104,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
             });
             alert(t('registerSuccess'));
             setIsRegisterModalOpen(false);
+            setIsResultsModalOpen(false); // Close list modal on success
             setSearchTerm(''); // Clear search after success
             setBirthDate('');
             setPersons([]);
@@ -115,72 +122,79 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
     };
 
     return (
-        <div className="flex flex-col h-full space-y-3">
+        <div className="flex flex-col h-full bg-white shadow-md rounded-lg overflow-hidden">
             {/* Expanded Search Section - Fills More Space */}
-            <div className="bg-white p-8 shadow-md rounded-lg flex-1 flex flex-col justify-center max-h-[400px]">
-                <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">환자 검색</h2>
+            <div className="p-8 flex-shrink-0 flex flex-col justify-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">{t('searchTitle')}</h2>
 
-                {/* Name Input - Larger */}
-                <div className="mb-6">
-                    <label className="block text-base font-medium text-gray-700 mb-3">{t('table.name')}</label>
-                    <div className="relative">
+                <div className="flex flex-row space-x-8 mb-8">
+                    {/* Name Input - Larger */}
+                    <div className="flex-1">
+                        <label className="block text-2xl font-bold text-gray-700 mb-4">{t('table.name')}</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder={t('searchPlaceholder')}
+                                className="block w-full pl-20 pr-6 py-8 border-4 border-gray-300 rounded-2xl text-5xl focus:ring-4 focus:ring-blue-500 focus:border-transparent font-bold"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <Search className="absolute left-6 top-9 h-12 w-12 text-gray-400" />
+                        </div>
+                    </div>
+
+                    {/* Birthdate Input - Larger */}
+                    <div className="flex-1">
+                        <label className="block text-2xl font-bold text-gray-700 mb-4">{t('table.birthdate')}</label>
                         <input
-                            type="text"
-                            placeholder={t('searchPlaceholder')}
-                            className="block w-full pl-14 pr-4 py-5 border-2 border-gray-300 rounded-xl text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            type="tel"
+                            placeholder="YYYYMMDD"
+                            className="block w-full px-6 py-8 border-4 border-gray-300 rounded-2xl text-5xl text-center tracking-widest focus:ring-4 focus:ring-blue-500 focus:border-transparent font-bold"
+                            value={birthDate}
+                            maxLength={8}
+                            onChange={(e) => setBirthDate(e.target.value.replace(/[^0-9]/g, ''))}
                         />
-                        <Search className="absolute left-4 top-5 h-7 w-7 text-gray-400" />
                     </div>
-                </div>
-
-                {/* Birthdate Input - Larger */}
-                <div>
-                    <label className="block text-base font-medium text-gray-700 mb-3">{t('table.birthdate')}</label>
-                    <input
-                        type="tel"
-                        placeholder="YYYYMMDD"
-                        className="block w-full px-4 py-5 border-2 border-gray-300 rounded-xl text-2xl text-center tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={birthDate}
-                        maxLength={8}
-                        onChange={(e) => setBirthDate(e.target.value.replace(/[^0-9]/g, ''))}
-                    />
                 </div>
             </div>
 
-            {/* Results Section - Single Column for Portrait, Scrollable */}
-            <div className="flex-1 overflow-y-auto">
-                {loading ? (
-                    <div className="text-center py-8 bg-white rounded-lg">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-                        <p className="mt-3 text-gray-500">{tMsg('loading')}</p>
-                    </div>
-                ) : persons.length > 0 ? (
-                    <div className="space-y-2">
-                        {persons.map((person) => (
-                            <div key={person.PCODE} className="bg-white border-l-4 border-blue-500 rounded-lg shadow-sm p-4 flex items-center justify-between">
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900">{person.PNAME}</h3>
-                                    <p className="text-sm text-gray-500 mt-0.5">{person.PBIRTH}</p>
-                                </div>
-                                <button
-                                    onClick={() => handleRegister(person)}
-                                    className="ml-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg flex items-center text-base transition-colors shadow-sm"
-                                >
-                                    <UserPlus className="w-5 h-5 mr-1.5" />
-                                    {t('register')}
-                                </button>
+            {/* Empty Bottom Area - Now White */}
+            <div className="flex-1">
+                {/* Content removed, just white space */}
+            </div>
+            <Modal
+                isOpen={isResultsModalOpen}
+                onClose={() => setIsResultsModalOpen(false)}
+                title={t('list')}
+                footer={
+                    <button
+                        onClick={() => setIsResultsModalOpen(false)}
+                        className="w-full py-4 bg-gray-200 text-gray-800 rounded-xl text-xl font-medium hover:bg-gray-300"
+                    >
+                        {tActions('close')}
+                    </button>
+                }
+            >
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                    {persons.map((person) => (
+                        <div key={person.PCODE} className="bg-white border-l-8 border-blue-500 rounded-xl shadow-md p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div className="flex-1">
+                                <h3 className="text-3xl font-bold text-gray-900 mb-2">{person.PNAME}</h3>
+                                <p className="text-xl text-gray-500">{person.PBIRTH}</p>
                             </div>
-                        ))}
-                    </div>
-                ) : (searchTerm || birthDate) && (
-                    <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm px-4">{t('noRecords')}</p>
-                    </div>
-                )}
-            </div>
+                            <button
+                                onClick={() => handleRegister(person)}
+                                className="ml-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl flex items-center text-2xl shadow-lg transform hover:scale-105 transition-all"
+                            >
+                                <UserPlus className="w-8 h-8 mr-3" />
+                                {t('register')}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </Modal>
 
+            {/* Registration Confirmation Modal */}
             <Modal
                 isOpen={isRegisterModalOpen}
                 onClose={() => setIsRegisterModalOpen(false)}
@@ -203,10 +217,10 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
                 }
             >
                 <div className="text-center py-4">
-                    <p className="text-xl text-gray-800 mb-2">
-                        {selectedPerson?.PNAME} <span className="text-gray-500">({selectedPerson?.PBIRTH})</span>
+                    <p className="text-7xl text-gray-800 mb-8 font-bold">
+                        {selectedPerson?.PNAME} <span className="text-gray-500 font-normal text-5xl">({selectedPerson?.PBIRTH})</span>
                     </p>
-                    <p className="text-gray-600">
+                    <p className="text-6xl text-gray-600 leading-tight">
                         {t('registerConfirm', { name: '' })}
                     </p>
                 </div>

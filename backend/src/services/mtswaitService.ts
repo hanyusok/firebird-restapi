@@ -263,33 +263,41 @@ const mtswaitService = {
     const tableName = mtswaitService.getTableName(visidate);
     const sql = getWaitUpdateSQL(tableName);
 
-    // const displayNameEncoded = encodeKorean(data.DISPLAYNAME || '');
-    // const displayNameHex = displayNameEncoded ? Buffer.from(displayNameEncoded).toString('hex') : '';
+    // Format YYYYMMDD -> YYYY-MM-DD for Firebird query if needed
+    let formattedDate = visidate;
+    if (visidate.length === 8 && /^\d{8}$/.test(visidate)) {
+      formattedDate = `${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`;
+    }
 
     const params = [
       data.RESID1,
       data.RESID2,
       // displayNameHex, // Removed
       pcode,
-      visidate
+      formattedDate
     ];
     return await pooledQueryDb('mtswait', sql, params);
   },
 
   // Delete
-  // Delete
   delete: async (pcode: number | string, visidate: string) => {
     const tableName = mtswaitService.getTableName(visidate);
     const sql = getWaitDeleteSQL(tableName);
 
-    await pooledQueryDb('mtswait', sql, [pcode, visidate]);
+    // Format YYYYMMDD -> YYYY-MM-DD for Firebird query if needed
+    let formattedDate = visidate;
+    if (visidate.length === 8 && /^\d{8}$/.test(visidate)) {
+      formattedDate = `${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`;
+    }
+
+    await pooledQueryDb('mtswait', sql, [pcode, formattedDate]);
 
     // Cascading delete to MTR table
     const mtrTableName = tableName.replace('WAIT', 'MTR');
     const mtrDeleteSql = getMtrDeleteByPcodeVisidateSQL(mtrTableName);
 
     try {
-      await pooledQueryDb('mtsmtr', mtrDeleteSql, [pcode, visidate]);
+      await pooledQueryDb('mtsmtr', mtrDeleteSql, [pcode, formattedDate]);
       console.log(`Cascaded delete to ${mtrTableName} for PCODE ${pcode}`);
     } catch (err) {
       console.error('Failed to cascade delete to MTR table:', err);

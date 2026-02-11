@@ -10,8 +10,8 @@ import { routing } from '@/i18n/request';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'Firebird REST API Frontend',
-    description: 'Manage Firebird Database Records',
+    title: '셀프 체크인',
+    description: '방문 고객 관리 시스템',
 };
 
 export default async function RootLayout({

@@ -15,12 +15,20 @@ interface WaitItem {
 
 interface WaitingListProps {
     refreshTrigger?: number;
+    onCountChange?: (count: number) => void;
 }
 
-export default function WaitingList({ refreshTrigger = 0 }: WaitingListProps) {
+export default function WaitingList({ refreshTrigger = 0, onCountChange }: WaitingListProps) {
     const t = useTranslations('home');
     const [waitList, setWaitList] = useState<WaitItem[]>([]);
     const [loading, setLoading] = useState(false);
+
+    // Notify parent of count changes
+    useEffect(() => {
+        if (onCountChange) {
+            onCountChange(waitList.length);
+        }
+    }, [waitList, onCountChange]);
 
     const fetchWaitList = async () => {
         setLoading(true);
@@ -47,7 +55,7 @@ export default function WaitingList({ refreshTrigger = 0 }: WaitingListProps) {
         return () => clearInterval(interval);
     }, [refreshTrigger]);
 
-    if (waitList.length === 0 && !loading) return null;
+    // if (waitList.length === 0 && !loading) return null; // Logic handled by parent layout now
 
     return (
         <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">

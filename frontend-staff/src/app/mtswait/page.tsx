@@ -83,7 +83,7 @@ export default function MtsWaitPage() {
     };
 
     const handleDelete = async (pcode: number) => {
-        if (!confirm('Are you sure you want to remove this patient from the waiting list?')) return;
+        if (!confirm('정말로 대기자 명단에서 이 환자를 삭제하시겠습니까?')) return;
 
         try {
             const cleanDate = date.replace(/-/g, '');
@@ -91,7 +91,7 @@ export default function MtsWaitPage() {
             fetchWaitList(date);
         } catch (error) {
             console.error('Failed to delete record:', error);
-            alert('Failed to delete record');
+            alert('삭제에 실패했습니다.');
         }
     };
 
@@ -100,7 +100,7 @@ export default function MtsWaitPage() {
             <div className="md:flex md:items-center md:justify-between">
                 <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                        Waiting List (MTSWAIT)
+                        대기자 명단 (MTSWAIT)
                     </h2>
                 </div>
                 <div className="mt-4 flex md:ml-4 md:mt-0">
@@ -115,7 +115,7 @@ export default function MtsWaitPage() {
                         className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                     >
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
+                        새로고침
                     </button>
                 </div>
             </div>
@@ -128,25 +128,25 @@ export default function MtsWaitPage() {
                                 <table className="min-w-full divide-y divide-gray-300">
                                     <thead>
                                         <tr>
-                                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">PCODE</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Birth Date</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Time</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Department</th>
-                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Doctor</th>
+                                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">환자코드</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">성명</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">생년월일 (나이)</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">주민번호</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">진료과</th>
+                                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">담당의</th>
                                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                                                <span className="sr-only">Actions</span>
+                                                <span className="sr-only">기능</span>
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
                                         {loading ? (
                                             <tr>
-                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">Loading...</td>
+                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">로딩중...</td>
                                             </tr>
                                         ) : waitList.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">No patients waiting for this date.</td>
+                                                <td colSpan={7} className="py-4 text-center text-sm text-gray-500">해당 날짜에 대기자가 없습니다.</td>
                                             </tr>
                                         ) : (
                                             waitList.map((item) => {
@@ -160,7 +160,7 @@ export default function MtsWaitPage() {
                                                             {item.PNAME}
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {item.PBIRTH}
+                                                            <div>{item.PBIRTH}</div>
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                                             {isEditing ? (
@@ -170,14 +170,14 @@ export default function MtsWaitPage() {
                                                                         value={editForm.RESID1 || ''}
                                                                         onChange={(e) => setEditForm({ ...editForm, RESID1: e.target.value })}
                                                                         className="block w-full rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-xs sm:leading-6"
-                                                                        placeholder="RESID1"
+                                                                        placeholder="주민앞자리"
                                                                     />
                                                                     <input
                                                                         type="text"
                                                                         value={editForm.RESID2 || ''}
                                                                         onChange={(e) => setEditForm({ ...editForm, RESID2: e.target.value })}
                                                                         className="block w-full rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-xs sm:leading-6"
-                                                                        placeholder="RESID2"
+                                                                        placeholder="주민뒷자리"
                                                                     />
                                                                 </div>
                                                             ) : (
@@ -199,14 +199,14 @@ export default function MtsWaitPage() {
                                                                     <button
                                                                         onClick={() => handleSaveEdit(item.PCODE, item.VISIDATE)}
                                                                         className="text-green-600 hover:text-green-900"
-                                                                        title="Save"
+                                                                        title="저장"
                                                                     >
                                                                         <Save className="h-4 w-4" />
                                                                     </button>
                                                                     <button
                                                                         onClick={handleCancelEdit}
                                                                         className="text-gray-600 hover:text-gray-900"
-                                                                        title="Cancel"
+                                                                        title="취소"
                                                                     >
                                                                         <X className="h-4 w-4" />
                                                                     </button>
@@ -216,14 +216,14 @@ export default function MtsWaitPage() {
                                                                     <button
                                                                         onClick={() => handleEdit(item)}
                                                                         className="text-blue-600 hover:text-blue-900"
-                                                                        title="Edit"
+                                                                        title="수정"
                                                                     >
                                                                         <Pencil className="h-4 w-4" />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDelete(item.PCODE)}
                                                                         className="text-red-600 hover:text-red-900"
-                                                                        title="Delete"
+                                                                        title="삭제"
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </button>
@@ -243,7 +243,7 @@ export default function MtsWaitPage() {
             </div>
             {waitList.length > 0 && (
                 <div className="mt-4 text-sm text-gray-500 text-right px-6">
-                    Total: {waitList.length} patient(s) waiting
+                    총 {waitList.length} 명의 대기자가 있습니다.
                 </div>
             )}
         </div>

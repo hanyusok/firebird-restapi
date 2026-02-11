@@ -23,6 +23,7 @@
     },
     "persons": {
         "title": "Person Management",
+        "searchTitle": "Customer Visit Search",
         "add": "Add Person",
         "edit": "Edit Person",
         "delete": "Delete Person",

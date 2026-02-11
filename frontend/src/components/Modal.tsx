@@ -16,21 +16,25 @@ export default function Modal({ isOpen, onClose, title, children, footer }: Moda
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md animate-fade-in-up">
-                <div className="flex justify-between items-center p-4 border-b">
-                    <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            {/* Increased max-width from max-w-md to max-w-4xl (approx 2x width) */}
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl animate-fade-in-up transform transition-all">
+                <div className="flex justify-between items-center p-8 border-b">
+                    {/* Increased text size */}
+                    <h3 className="text-3xl font-bold text-gray-900">{title}</h3>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                        className="text-gray-400 hover:text-gray-500 focus:outline-none p-2 rounded-full hover:bg-gray-100"
                     >
-                        <X className="h-5 w-5" />
+                        {/* Increased icon size */}
+                        <X className="h-8 w-8" />
                     </button>
                 </div>
-                <div className="p-4">
+                {/* Increased padding */}
+                <div className="p-8">
                     {children}
                 </div>
                 {footer && (
-                    <div className="p-4 border-t bg-gray-50 flex justify-end space-x-2 rounded-b-lg">
+                    <div className="p-6 border-t bg-gray-50 flex justify-end space-x-4 rounded-b-2xl">
                         {footer}
                     </div>
                 )}
