@@ -1,5 +1,4 @@
-import Firebird from 'node-firebird';
-import { pooledQueryDb, mtswaitOptions } from '../config/database';
+import { pooledQueryDb } from '../config/database';
 import { processMtswaitFields, encodeKorean, decodeKorean, generateResIds } from '../utils/koreanUtils';
 import {
   getWaitByVisidateSQL,
@@ -23,25 +22,8 @@ const mtswaitService = {
   getByVisitDate: async (visidate: string) => {
     const tableName = mtswaitService.getTableName(visidate);
     const sql = getWaitByVisidateSQL(tableName);
-    console.log(`Querying ${tableName} for date ${visidate} (direct attach)`);
-
     // 1. Get Wait List
-    const waitList: any[] = await new Promise((resolve, reject) => {
-      Firebird.attach(mtswaitOptions, (err: any, db: any) => {
-        if (err) {
-          console.error('Direct attach failed:', err);
-          return reject(err);
-        }
-        db.query(sql, [visidate], (err: any, result: any) => {
-          db.detach();
-          if (err) {
-            console.error('Query failed:', err);
-            return reject(err);
-          }
-          resolve(result);
-        });
-      });
-    });
+    const waitList = await pooledQueryDb('mtswait', sql, [visidate]);
 
     if (waitList.length === 0) return [];
 

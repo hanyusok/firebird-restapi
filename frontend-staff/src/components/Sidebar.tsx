@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Users, FileText, X, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -16,7 +16,9 @@ const Sidebar = () => {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [knownPcodes, setKnownPcodes] = useState<Set<number>>(new Set());
+    // Use refs for polling logic to avoid infinite loops and maintain a stable interval
+    const knownKeysRef = useRef(new Set<string>());
+    const isFirstLoadRef = useRef(true);
 
     const navigation = [
         { name: '대기자 명단 (MTSWAIT)', href: '/mtswait', icon: Users },
@@ -40,10 +42,8 @@ const Sidebar = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Notification Polling (Refactored to be cleaner)
+    // Notification Polling
     useEffect(() => {
-        let isFirstLoad = true;
-
         const checkForNewRegistrations = async () => {
             try {
                 const today = new Date();
@@ -55,14 +55,29 @@ const Sidebar = () => {
                 const response = await api.get<any[]>(`/mtswait/date/${dateStr}`);
                 const currentList = response.data;
 
-                if (isFirstLoad) {
-                    const initialPcodes = new Set(currentList.map((item: any) => item.PCODE));
-                    setKnownPcodes(initialPcodes);
-                    isFirstLoad = false;
+                // Create unique keys for each registration event: PCODE + RESID1 (timestamp)
+                const currentKeys = new Set(currentList.map((item: any) => `${item.PCODE}-${item.RESID1}`));
+
+                if (isFirstLoadRef.current) {
+                    // Initial load: mark all current records as known
+                    knownKeysRef.current = currentKeys;
+                    isFirstLoadRef.current = false;
                 } else {
-                    const newItems = currentList.filter((item: any) => !knownPcodes.has(item.PCODE));
+                    // Find items whose key is not in knownKeysRef
+                    const newItems = currentList.filter((item: any) => {
+                        const key = `${item.PCODE}-${item.RESID1}`;
+                        return !knownKeysRef.current.has(key);
+                    });
 
                     if (newItems.length > 0) {
+                        // Play sound effect
+                        try {
+                            const audio = new Audio('/notification.mp3');
+                            audio.play().catch(e => console.error('Audio play failed:', e));
+                        } catch (e) {
+                            console.error('Audio creation failed:', e);
+                        }
+
                         const newNotifications: Notification[] = newItems.map((item: any) => ({
                             id: Date.now() + Math.random(),
                             message: `신규 접수: ${item.PNAME}`,
@@ -71,9 +86,10 @@ const Sidebar = () => {
 
                         setNotifications(prev => [...prev, ...newNotifications]);
 
-                        const updatedPcodes = new Set(knownPcodes);
-                        newItems.forEach((item: any) => updatedPcodes.add(item.PCODE));
-                        setKnownPcodes(updatedPcodes);
+                        // Add new keys to known set
+                        newItems.forEach((item: any) => {
+                            knownKeysRef.current.add(`${item.PCODE}-${item.RESID1}`);
+                        });
                     }
                 }
             } catch (error) {
@@ -85,7 +101,7 @@ const Sidebar = () => {
         checkForNewRegistrations();
 
         return () => clearInterval(intervalId);
-    }, [knownPcodes]);
+    }, []);
 
     const removeNotification = (id: number) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
