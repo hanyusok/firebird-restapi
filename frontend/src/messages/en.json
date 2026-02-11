@@ -1,7 +1,7 @@
 {
     "common": {
         "appTitle": "Mart Clinic",
-        "appDescription": "Manage Firebird Database Records"
+        "appDescription": "Manage Database Records"
     },
     "nav": {
         "home": "Home",
@@ -10,8 +10,8 @@
         "treatmentRecords": "Treatment Records"
     },
     "home": {
-        "title": "System Dashboard",
-        "description": "Overview of the Firebird REST API System",
+        "title": "Self Check-in",
+        "description": "Check-in your visit",
         "managePersons": "Manage Persons",
         "waitingList": "Waiting List",
         "treatmentRecords": "Treatment Records",
@@ -28,7 +28,7 @@
         "email": "Email",
         "phone": "Phone",
         "list": "Person List",
-        "description": "Search and view person records from the Firebird database.",
+        "description": "Search and view person records from the database.",
         "searchPlaceholder": "Search by name...",
         "birthdatePlaceholder": "YYYYMMDD",
         "noRecords": "No persons found (Please provide both Name and Birthdate to search)",
@@ -108,5 +108,13 @@
         "error": "An error occurred",
         "success": "Operation successful",
         "confirmDelete": "Are you sure you want to delete this item?"
+    },
+    "auth": {
+        "staffLogin": "Staff Login",
+        "enterPassword": "Enter Password",
+        "login": "Login",
+        "cancel": "Cancel",
+        "logout": "Logout",
+        "invalidPassword": "Invalid password"
     }
 }

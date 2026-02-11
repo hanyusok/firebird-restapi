@@ -48,33 +48,43 @@ const mtswaitService = {
     // 2. Extract PCODEs
     const pcodes = [...new Set(waitList.map(item => item.PCODE))];
 
-    // 3. Query PERSON table for names
-    // Note: 'pooledQueryDb' handles the connection. We need to query 'person'.
-    // We can't use simple WHERE PCODE IN (?) because Firebird doesn't support array params directly like that easily in node-firebird without expanding ?
-    // But pooledQueryDb expects array of params.
-    // We will construct the SQL dynamically for the IN clause.
+    // 3. Query PERSON table for names and birthdate
     const placeholders = pcodes.map(() => '?').join(',');
-    const personSql = `SELECT PCODE, CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) as PNAME FROM PERSON WHERE PCODE IN (${placeholders})`;
+    const personSql = `SELECT PCODE, CAST(PNAME AS VARCHAR(40) CHARACTER SET OCTETS) as PNAME, PBIRTH FROM PERSON WHERE PCODE IN (${placeholders})`;
 
-    const personResults = await pooledQueryDb('person', personSql, pcodes); // params are the pcodes array
+    const personResults = await pooledQueryDb('person', personSql, pcodes);
 
-    // 4. Map PCODE -> PNAME
-    const nameMap = new Map();
+    // 4. Map PCODE -> Details
+    const personMap = new Map();
     if (Array.isArray(personResults)) {
       personResults.forEach((p: any) => {
-        nameMap.set(p.PCODE, p.PNAME); // PNAME is likely Buffer here
+        personMap.set(p.PCODE, { pname: p.PNAME, pbirth: p.PBIRTH });
       });
-    } else if (personResults) {
-      const p = personResults as any;
-      nameMap.set(p.PCODE, p.PNAME);
     }
 
     // 5. Merge and Process
     const merged = waitList.map(item => {
-      const nameBuffer = nameMap.get(item.PCODE);
+      const details = personMap.get(item.PCODE);
+      const decodedPname = details ? (decodeKorean(details.pname) || '') : '';
+
+      // Convert PBIRTH (Date) to YYYYMMDD string or YYYY-MM-DD for consistency
+      let pbirthStr = '';
+      if (details && details.pbirth) {
+        const d = new Date(details.pbirth);
+        // Assuming UTC date from DB, convert to local YYYY-MM-DD or YYYYMMDD
+        // koreanUtils.convertToLocalTime returns YYYY. MM. DD. format which is nice for display but logic uses substring
+        // Let's use standard ISO-like string YYYY-MM-DD for easier parsing in frontend
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        pbirthStr = `${year}-${month}-${day}`;
+      }
+
       return {
         ...item,
-        DISPLAYNAME: nameBuffer // processMtswaitFields will decode this
+        PNAME: decodedPname,
+        PBIRTH: pbirthStr,
+        DISPLAYNAME: details ? details.pname : null // Keep for compatibility if needed, buffer for processMtswaitFields
       };
     });
 

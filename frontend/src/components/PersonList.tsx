@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { Person, PaginatedResponse } from '@/types';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Person } from '@/types';
+import { Search, UserPlus, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Modal from './Modal';
 
-export default function PersonList() {
+interface PersonListProps {
+    onRegisterSuccess?: () => void;
+}
+
+export default function PersonList({ onRegisterSuccess }: PersonListProps) {
     const t = useTranslations('persons');
     const tActions = useTranslations('actions');
     const tMsg = useTranslations('messages');
@@ -15,59 +19,43 @@ export default function PersonList() {
     const [persons, setPersons] = useState<Person[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
     const [birthDate, setBirthDate] = useState('');
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-    const fetchPersons = async () => {
-        setLoading(true);
-        try {
-            if (searchTerm || birthDate) {
-                // Require both name and birthdate for search
-                if (searchTerm && birthDate && birthDate.length === 8) {
-                    // Use search endpoint
-                    const params: any = {};
-                    params.pname = searchTerm;
-
-                    // Format YYYYMMDD to YYYY-MM-DD for backend
-                    params.pbirth = `${birthDate.substring(0, 4)}-${birthDate.substring(4, 6)}-${birthDate.substring(6, 8)}`;
-
-                    const response = await api.get<Person[]>(`/persons/search`, {
-                        params
-                    });
-                    setPersons(response.data);
-                    setTotalPages(1); // Search endpoint doesn't return pagination yet
-                    setTotalItems(response.data.length);
-                } else {
-                    // One is missing - clear list or handle as desired
-                    setPersons([]);
-                    setTotalPages(1);
-                    setTotalItems(0);
-                }
-            } else {
-                // No search terms - clear list
+    // Initial load cleared, only search on demand or input
+    useEffect(() => {
+        const fetchPersons = async () => {
+            // Privacy: Require BOTH Name and Birthdate (8 digits) to search
+            if (!searchTerm || !birthDate || birthDate.length !== 8) {
                 setPersons([]);
-                setTotalPages(1);
-                setTotalItems(0);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const params: any = {};
+                if (searchTerm) params.pname = searchTerm;
+                if (birthDate && birthDate.length === 8) {
+                    params.pbirth = `${birthDate.substring(0, 4)}-${birthDate.substring(4, 6)}-${birthDate.substring(6, 8)}`;
+                }
+
+                if (searchTerm || (birthDate && birthDate.length === 8)) {
+                    const response = await api.get<Person[]>(`/persons/search`, { params });
+                    setPersons(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch persons:', error);
+            } finally {
                 setLoading(false);
             }
-        } catch (error) {
-            console.error('Failed to fetch persons:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
-    useEffect(() => {
-        // Debounce search
         const timer = setTimeout(() => {
             fetchPersons();
         }, 500);
         return () => clearTimeout(timer);
-    }, [page, searchTerm, birthDate]);
+    }, [searchTerm, birthDate]);
 
     const handleRegister = (person: Person) => {
         setSelectedPerson(person);
@@ -83,19 +71,17 @@ export default function PersonList() {
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
         const visidate = `${yyyy}-${mm}-${dd}`;
-        const visidateFormatted = `${yyyy}${mm}${dd}`; // YYYYMMDD format for API
+        const visidateFormatted = `${yyyy}${mm}${dd}`;
 
         try {
-            // Check if already registered for today
+            // Check existence
             try {
                 const checkResponse = await api.get(`/mtswait/date/${visidateFormatted}`);
                 const existingRegistrations = checkResponse.data;
-
                 if (Array.isArray(existingRegistrations)) {
                     const alreadyRegistered = existingRegistrations.some(
                         (reg: any) => reg.PCODE === person.PCODE
                     );
-
                     if (alreadyRegistered) {
                         alert(t('alreadyRegistered', { name: person.PNAME || '', date: visidate }));
                         setIsRegisterModalOpen(false);
@@ -103,216 +89,125 @@ export default function PersonList() {
                     }
                 }
             } catch (checkError: any) {
-                // If 404, no records exist for today - proceed with registration
-                if (checkError.response?.status !== 404) {
-                    throw checkError;
-                }
+                if (checkError.response?.status !== 404) throw checkError;
             }
 
-            // Proceed with registration
             await api.post('/mtswait', {
                 PCODE: person.PCODE,
                 VISIDATE: visidate
             });
             alert(t('registerSuccess'));
             setIsRegisterModalOpen(false);
-        } catch (error: any) {
-            console.error('Registration failed:', error);
-            const errorMessage = error.response?.data?.message || error.message;
+            setSearchTerm(''); // Clear search after success
+            setBirthDate('');
+            setPersons([]);
 
-            // Provide user-friendly error message for constraint violations
-            if (errorMessage.includes('PRIMARY') || errorMessage.includes('UNIQUE')) {
-                alert(t('alreadyRegistered', { name: person.PNAME || '', date: visidate }));
-            } else {
-                alert(t('registerFailed', { error: errorMessage }));
+            // Trigger refresh in parent
+            if (onRegisterSuccess) {
+                onRegisterSuccess();
             }
+
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message || error.message;
+            alert(t('registerFailed', { error: errorMessage }));
             setIsRegisterModalOpen(false);
         }
     };
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center bg-white p-4 shadow rounded-lg flex-wrap gap-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                    {t('list')} <span className="text-sm text-gray-500 ml-2">({totalItems})</span>
-                </h2>
-                <div className="flex space-x-2">
+        <div className="space-y-6">
+            {/* Search Section - Large Inputs */}
+            <div className="bg-white p-6 shadow-lg rounded-xl flex flex-col gap-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('table.name')}</label>
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder={t('searchPlaceholder')}
-                            className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder={t('searchPlaceholder')} // e.g., "Enter Name"
+                            className="block w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-xl text-xl focus:ring-blue-500 focus:border-blue-500"
                             value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setPage(1); // Reset to page 1 on search
-                            }}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                        <Search className="absolute left-4 top-5 h-6 w-6 text-gray-400" />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('table.birthdate')}</label>
                     <div className="relative">
                         <input
-                            type="text"
-                            placeholder={t('birthdatePlaceholder')}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            type="tel" // Triggers numeric keypad on mobile/tablet
+                            placeholder="YYYYMMDD"
+                            className="block w-full pl-4 pr-4 py-4 border-2 border-gray-300 rounded-xl text-xl focus:ring-blue-500 focus:border-blue-500 tracking-widest"
                             value={birthDate}
                             maxLength={8}
-                            onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
-                                setBirthDate(value);
-                                setPage(1);
-                            }}
+                            onChange={(e) => setBirthDate(e.target.value.replace(/[^0-9]/g, ''))}
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('table.name')}
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('table.birthdate')}
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('table.gubun')}
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('table.lastCheck')}
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('table.action')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                                        {tMsg('loading')}
-                                    </td>
-                                </tr>
-                            ) : persons.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                                        {t('noRecords')}
-                                    </td>
-                                </tr>
-                            ) : (
-                                persons.map((person) => (
-                                    <tr key={person.PCODE} className="hover:bg-gray-50">
-
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {person.PNAME}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {person.PBIRTH}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {person.RELATION2 || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {person.LASTCHECK}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button
-                                                onClick={() => handleRegister(person)}
-                                                className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
-                                            >
-
-                                                {t('register')}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Results Section - Grid of Cards */}
+            <div className="space-y-4">
+                {loading ? (
+                    <div className="text-center py-10">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="mt-4 text-gray-500 text-lg">{tMsg('loading')}</p>
+                    </div>
+                ) : persons.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {persons.map((person) => (
+                            <div key={person.PCODE} className="bg-white border rounded-xl shadow-sm p-6 flex flex-col justify-between h-48">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-900">{person.PNAME}</h3>
+                                    <p className="text-lg text-gray-500 mt-1">{person.PBIRTH}</p>
+                                </div>
+                                <button
+                                    onClick={() => handleRegister(person)}
+                                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg transition-colors"
+                                >
+                                    <UserPlus className="w-6 h-6 mr-2" />
+                                    {t('register')}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                ) : (searchTerm || birthDate) && (
+                    <div className="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                        <p className="text-gray-500 text-lg">{t('noRecords')}</p>
+                    </div>
+                )}
             </div>
-
-            {/* Pagination */}
-            {!searchTerm && !birthDate && (
-                <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 shadow rounded-lg">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                        <button
-                            onClick={() => setPage(Math.max(1, page - 1))}
-                            disabled={page === 1}
-                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            {t('previous')}
-                        </button>
-                        <button
-                            onClick={() => setPage(Math.min(totalPages, page + 1))}
-                            disabled={page === totalPages}
-                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            {t('next')}
-                        </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-sm text-gray-700">
-                                {t.rich('showingPage', {
-                                    page,
-                                    totalPages,
-                                    bold: (chunks) => <span className="font-medium">{chunks}</span>
-                                })}
-                            </p>
-                        </div>
-                        <div>
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <button
-                                    onClick={() => setPage(Math.max(1, page - 1))}
-                                    disabled={page === 1}
-                                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    <span className="sr-only">{t('previous')}</span>
-                                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                                </button>
-                                <button
-                                    onClick={() => setPage(Math.min(totalPages, page + 1))}
-                                    disabled={page === totalPages}
-                                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    <span className="sr-only">{t('next')}</span>
-                                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                                </button>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <Modal
                 isOpen={isRegisterModalOpen}
                 onClose={() => setIsRegisterModalOpen(false)}
-                title="마트의원"
+                title={t('register')}
                 footer={
-                    <>
+                    <div className="flex space-x-4 w-full">
                         <button
                             onClick={() => setIsRegisterModalOpen(false)}
-                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                            className="flex-1 py-4 bg-gray-200 text-gray-800 rounded-xl text-xl font-medium hover:bg-gray-300"
                         >
                             {tActions('cancel') || 'Cancel'}
                         </button>
                         <button
                             onClick={confirmRegistration}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                            className="flex-1 py-4 bg-blue-600 text-white rounded-xl text-xl font-bold hover:bg-blue-700 shadow-md"
                         >
                             {tActions('confirm') || 'Confirm'}
                         </button>
-                    </>
+                    </div>
                 }
             >
-                <p className="text-gray-700">
-                    {selectedPerson && t('registerConfirm', { name: selectedPerson.PNAME || '' })}
-                </p>
+                <div className="text-center py-4">
+                    <p className="text-xl text-gray-800 mb-2">
+                        {selectedPerson?.PNAME} <span className="text-gray-500">({selectedPerson?.PBIRTH})</span>
+                    </p>
+                    <p className="text-gray-600">
+                        {t('registerConfirm', { name: '' })}
+                    </p>
+                </div>
             </Modal>
         </div>
     );
