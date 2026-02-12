@@ -13,6 +13,7 @@ export const mtrSelectFields = '"#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, A
 export const getMtrSelectSQL = (tableName: string = 'MTR2026'): string => `SELECT ${mtrSelectFields} FROM ${tableName}`;
 export const getMtrByPcodeSQL = (tableName: string = 'MTR2026'): string => `${getMtrSelectSQL(tableName)} WHERE PCODE = ? ORDER BY VISIDATE DESC, VISITIME DESC`;
 export const getMtrByVisidateSQL = (tableName: string = 'MTR2026'): string => `${getMtrSelectSQL(tableName)} WHERE VISIDATE = ? ORDER BY VISITIME`;
+export const getMtrByVisidateAndFinSQL = (tableName: string = 'MTR2026'): string => `${getMtrSelectSQL(tableName)} WHERE VISIDATE = ? AND FIN = ? ORDER BY VISITIME`;
 export const getMtrAllSQL = (tableName: string = 'MTR2026'): string => `${getMtrSelectSQL(tableName)} ORDER BY VISIDATE DESC, VISITIME DESC`;
 export const getMtrInsertSQL = (tableName: string = 'MTR2026'): string => `INSERT INTO ${tableName} ("#", PCODE, VISIDATE, VISITIME, PNAME, PBIRTH, AGE, PHONENUM, SEX, SERIAL, N, GUBUN, RESERVED, FIN, TEMPERATUR) VALUES (GEN_ID(GEN_${tableName}_SEQ, 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 export const getMtrUpdateSQL = (tableName: string = 'MTR2026'): string => `UPDATE ${tableName} SET VISITIME = ?, PNAME = ?, PBIRTH = ?, AGE = ?, PHONENUM = ?, SEX = ?, GUBUN = ?, TEMPERATUR = ? WHERE "#" = ?`;

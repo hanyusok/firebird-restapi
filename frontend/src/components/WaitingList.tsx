@@ -39,8 +39,17 @@ export default function WaitingList({ refreshTrigger = 0, onCountChange }: Waiti
             const dd = String(today.getDate()).padStart(2, '0');
             const visidateFormatted = `${yyyy}${mm}${dd}`;
 
-            const response = await api.get<WaitItem[]>(`/mtswait/date/${visidateFormatted}`);
-            setWaitList(response.data);
+            const response = await api.get<any[]>(`/mtsmtr/date/${visidateFormatted}?fin=`);
+            // Map mtsmtr fields to WaitItem
+            const mappedItems: WaitItem[] = response.data.map(item => ({
+                PCODE: item.PCODE,
+                VISIDATE: item.VISIDATE,
+                PNAME: item.PNAME,
+                PBIRTH: item.PBIRTH,
+                TTIME: item.VISITIME, // Map VISITIME to TTIME
+                JINRYO: item.FIN ? '1' : '0' // Map FIN to JINRYO (Empty -> 0/Waiting, Non-empty -> 1/Completed)
+            }));
+            setWaitList(mappedItems);
         } catch (error) {
             console.error('Failed to fetch wait list:', error);
         } finally {

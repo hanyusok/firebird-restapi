@@ -1,6 +1,14 @@
 import { pooledQueryDb } from '../config/database';
 import { processKoreanFields } from '../utils/koreanUtils';
-import { getMtrByVisidateSQL, getMtrInsertSQL, getMtrUpdateSQL, getMtrDeleteSQL, getMtrByIdSQL, getWaitDeleteSQL } from './sqlQueries';
+import {
+    getMtrByVisidateSQL,
+    getMtrByVisidateAndFinSQL,
+    getMtrInsertSQL,
+    getMtrUpdateSQL,
+    getMtrDeleteSQL,
+    getMtrByIdSQL,
+    getWaitDeleteSQL
+} from './sqlQueries';
 
 const mtsmtrService = {
     // Helper to get table name from date
@@ -11,22 +19,23 @@ const mtsmtrService = {
         return `MTR${year}`;
     },
 
-    getByVisitDate: async (visidate: string) => {
+    getByVisitDate: async (visidate: string, fin?: string) => {
         const tableName = mtsmtrService.getTableName(visidate);
-        const sql = getMtrByVisidateSQL(tableName);
-        console.log(`Querying ${tableName} for date ${visidate}`);
+
+        let sql: string;
+        const params: any[] = [visidate];
+
+        if (fin !== undefined) {
+            sql = getMtrByVisidateAndFinSQL(tableName);
+            params.push(fin);
+        } else {
+            sql = getMtrByVisidateSQL(tableName);
+        }
+
+        console.log(`Querying ${tableName} for date ${visidate} with fin='${fin}'`);
 
         // MTR tables have PNAME, so we don't need the join logic we used for WAIT
-        const results = await pooledQueryDb('mtsmtr', sql, [visidate]);
-
-        // Process Korean encoding and Date fields
-        // We can reuse processKoreanFields or processMtswaitFields?
-        // processKoreanFields is for PERSON table (has PNAME, ADDRESS etc)
-        // processMtswaitFields is for WAIT table (has DISPLAYNAME)
-
-        // Let's look at processKoreanFields in utils. 
-        // It decodes PNAME, RELATION2, MEMO1, MEMO2. 
-        // MTR2026 has PNAME.
+        const results = await pooledQueryDb('mtsmtr', sql, params);
 
         return processKoreanFields(results);
     },
@@ -95,23 +104,14 @@ const mtsmtrService = {
         await pooledQueryDb('mtsmtr', deleteMtrSql, [id]);
 
         // 3. Delete from WAIT (Cascading delete)
-        // We need to calculate WAIT table name (same year logic)
-        // Verify if we should use mtswaitService or direct SQL. Direct SQL avoids circular dependency possibility and is simpler here.
         const waitTableName = tableName.replace('MTR', 'WAIT');
         const deleteWaitSql = getWaitDeleteSQL(waitTableName);
-
-        // We use PCODE and VISIDATE to delete from WAIT
-        // Note: mtrRecord.VISIDATE might be Date object or string depending on driver. 
-        // We passed visidate string to the function, safer to use that or ensure format.
-        // But wait, the record in DB has the correct PCODE.
 
         try {
             await pooledQueryDb('mtswait', deleteWaitSql, [pcode, visidate]);
             console.log(`Cascaded delete to ${waitTableName} for PCODE ${pcode}`);
         } catch (err) {
             console.error('Failed to cascade delete to WAIT table:', err);
-            // We don't throw here, as MTR delete was successful.
-            // Or should we?
         }
 
         return { message: 'MTR and WAIT records deleted' };

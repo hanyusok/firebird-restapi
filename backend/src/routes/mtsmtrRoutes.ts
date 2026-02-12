@@ -36,7 +36,9 @@ router.get('/date/:visidate', async (req: Request, res: Response, next: NextFunc
         // Format YYYYMMDD -> YYYY-MM-DD for Firebird query
         const formattedDate = `${visidate.slice(0, 4)}-${visidate.slice(4, 6)}-${visidate.slice(6, 8)}`;
 
-        const data = await mtsmtrService.getByVisitDate(formattedDate);
+        const fin = req.query.fin as string | undefined;
+
+        const data = await mtsmtrService.getByVisitDate(formattedDate, fin);
 
         // Return empty list instead of 404 if no records found, 
         // consistent with typical list APIs (though mtswait returned 404, valid choice too)
