@@ -14,7 +14,17 @@ const app = express();
 import path from 'path';
 
 // Security Middleware
-app.use(helmet());
+// Security Middleware (Disable HSTS and allow Swagger UI)
+app.use(
+    helmet({
+        hsts: false, // Disable HSTS for local dev
+        // Swagger UI가 다른 출처의 리소스를 로드하거나 
+        // 로컬 IP(HTTP)에서 실행될 때 차단되지 않도록 설정 해제
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: false,
+        contentSecurityPolicy: false, // Swagger UI 깨짐 방지
+    })
+);
 
 // Serve static files (including favicon.ico)
 app.use(express.static(path.join(__dirname, '../public')));
