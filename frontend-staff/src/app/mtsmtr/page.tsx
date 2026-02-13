@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Pencil, Trash2, Save, X, RefreshCw } from 'lucide-react';
+import { formatDateString } from '@/lib/dateUtils';
 
 interface MtrItem {
     '#': number;
@@ -31,7 +32,7 @@ export default function MtsMtrPage() {
     const fetchMtrList = async (dateStr: string) => {
         setLoading(true);
         try {
-            const formattedDate = dateStr.replace(/-/g, '');
+            const formattedDate = formatDateString(dateStr);
             const response = await api.get<MtrItem[]>(`/mtsmtr/date/${formattedDate}`);
             setMtrList(response.data);
         } catch (error) {

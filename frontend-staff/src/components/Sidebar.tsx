@@ -6,19 +6,13 @@ import { usePathname } from 'next/navigation';
 import { Users, FileText, X, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '@/lib/api';
 
-interface Notification {
-    id: number;
-    message: string;
-    subtext: string;
-}
+import { useMtsWait } from '@/context/MtsWaitContext';
+
 
 const Sidebar = () => {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    // Use refs for polling logic to avoid infinite loops and maintain a stable interval
-    const knownKeysRef = useRef(new Set<string>());
-    const isFirstLoadRef = useRef(true);
+    const { notifications, removeNotification } = useMtsWait();
 
     const navigation = [
         { name: '대기자 명단 (MTSWAIT)', href: '/mtswait', icon: Users },
@@ -41,71 +35,6 @@ const Sidebar = () => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
-    // Notification Polling
-    useEffect(() => {
-        const checkForNewRegistrations = async () => {
-            try {
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const dateStr = `${yyyy}${mm}${dd}`;
-
-                const response = await api.get<any[]>(`/mtswait/date/${dateStr}`);
-                const currentList = response.data;
-
-                // Create unique keys for each registration event: PCODE + RESID1 (timestamp)
-                const currentKeys = new Set(currentList.map((item: any) => `${item.PCODE}-${item.RESID1}`));
-
-                if (isFirstLoadRef.current) {
-                    // Initial load: mark all current records as known
-                    knownKeysRef.current = currentKeys;
-                    isFirstLoadRef.current = false;
-                } else {
-                    // Find items whose key is not in knownKeysRef
-                    const newItems = currentList.filter((item: any) => {
-                        const key = `${item.PCODE}-${item.RESID1}`;
-                        return !knownKeysRef.current.has(key);
-                    });
-
-                    if (newItems.length > 0) {
-                        // Play sound effect
-                        try {
-                            const audio = new Audio('/notification.mp3');
-                            audio.play().catch(e => console.error('Audio play failed:', e));
-                        } catch (e) {
-                            console.error('Audio creation failed:', e);
-                        }
-
-                        const newNotifications: Notification[] = newItems.map((item: any) => ({
-                            id: Date.now() + Math.random(),
-                            message: `신규 접수: ${item.PNAME}`,
-                            subtext: `생년월일: ${item.PBIRTH}`
-                        }));
-
-                        setNotifications(prev => [...prev, ...newNotifications]);
-
-                        // Add new keys to known set
-                        newItems.forEach((item: any) => {
-                            knownKeysRef.current.add(`${item.PCODE}-${item.RESID1}`);
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Polling error:', error);
-            }
-        };
-
-        const intervalId = setInterval(checkForNewRegistrations, 5000);
-        checkForNewRegistrations();
-
-        return () => clearInterval(intervalId);
-    }, []);
-
-    const removeNotification = (id: number) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
-    };
 
     return (
         <>

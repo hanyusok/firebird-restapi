@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
+import { MtsWaitProvider } from '@/context/MtsWaitContext';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -26,12 +28,14 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full bg-gray-50">
       <body className={`${geistSans.variable} ${geistMono.variable} h-full`}>
-        <div className="flex h-full">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
-            {children}
-          </main>
-        </div>
+        <MtsWaitProvider>
+          <div className="flex h-full">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
+              {children}
+            </main>
+          </div>
+        </MtsWaitProvider>
       </body>
     </html>
   );

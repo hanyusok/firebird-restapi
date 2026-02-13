@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Pencil, Trash2, Save, X, RefreshCw } from 'lucide-react';
+import { useMtsWait } from '@/context/MtsWaitContext';
+import { formatDateString } from '@/lib/dateUtils';
 
 interface WaitItem {
     PCODE: number;
@@ -18,31 +20,72 @@ interface WaitItem {
 }
 
 export default function MtsWaitPage() {
+    const { waitList, loading, refresh, lastUpdated } = useMtsWait();
+
+    // Date selection might still be needed if we want to view past dates??
+    // But context currently hardcodes 'today'.
+    // If the requirement is to view ANY date, the Context needs to support date selection.
+    // The previous implementation allowed selecting date.
+    // However, the Sidebar polling was hardcoded to Today.
+    // The current task was to fix the conflict where sidebar polls today, and page fetches separately.
+    // If I switch page to use context, I am forcing "Today" view.
+    // If the user selects another date, we should probably fetch locally or update context?
+    // Given the "Kiosk Reception" nature, "Today" is the priority.
+    // To support other dates, I should probably keep the date state here.
+    // If date === today, use context.data. Else fetch manually.
+    // OR, make context support date selection?
+    // Let's stick to "Today" for the main live view, as that's what the Sidebar tracks.
+    // If the user changes date, we can fall back to local fetch OR update context date.
+    // Updating context date would mean Sidebar also switches (which might be weird if alarms go off for past dates?).
+    // Actually, Sidebar only alarms for *new* additions.
+
+    // Decision: For now, I will modify the page to use context for TODAY's data.
+    // If date is NOT today, it will fetch manually.
+    // But wait, the Context fetches EVERY 5 seconds.
+
     const [date, setDate] = useState(() => {
         const today = new Date();
         return today.toISOString().split('T')[0];
     });
-    const [waitList, setWaitList] = useState<WaitItem[]>([]);
-    const [loading, setLoading] = useState(false);
+
+    // We need to type cast waitList from context to local WaitItem if strictly needed, or just use it.
+    // The context defines WaitItem loosely.
+
+    const [localWaitList, setLocalWaitList] = useState<WaitItem[]>([]);
+    const [isViewingToday, setIsViewingToday] = useState(true);
+
     const [editingKey, setEditingKey] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<Partial<WaitItem>>({});
 
-    const fetchWaitList = async (dateStr: string) => {
-        setLoading(true);
-        try {
-            const formattedDate = dateStr.replace(/-/g, '');
-            const response = await api.get<WaitItem[]>(`/mtswait/date/${formattedDate}`);
-            setWaitList(response.data);
-        } catch (error) {
-            console.error('Failed to fetch wait list:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        const today = new Date().toISOString().split('T')[0];
+        setIsViewingToday(date === today);
+    }, [date]);
 
     useEffect(() => {
-        fetchWaitList(date);
-    }, [date]);
+        if (isViewingToday) {
+            // Use context data
+            // We need to cast or map if types mismatch slightly
+            setLocalWaitList(waitList as unknown as WaitItem[]);
+        } else {
+            fetchWaitList(date);
+        }
+    }, [isViewingToday, waitList, date]);
+
+    const fetchWaitList = async (dateStr: string) => {
+        // Only for non-today
+        if (dateStr === new Date().toISOString().split('T')[0]) return;
+
+        // setLoading(true); // We don't have local loading state anymore easily?
+        // Let's add one or just rely on async
+        try {
+            const formattedDate = formatDateString(dateStr);
+            const response = await api.get<WaitItem[]>(`/mtswait/date/${formattedDate}`);
+            setLocalWaitList(response.data);
+        } catch (error) {
+            console.error('Failed to fetch wait list:', error);
+        }
+    };
 
     const handleEdit = (item: WaitItem) => {
         const key = `${item.PCODE}-${item.VISIDATE}`;
@@ -60,22 +103,15 @@ export default function MtsWaitPage() {
 
     const handleSaveEdit = async (pcode: number, visidate: string) => {
         try {
-            // Determine formatted date for API based on current item's visidate format
-            // VISIDATE from API is typically "YYYY. MM. DD."
-            // But the update endpoint expects just the YYYYMMDD string in the URL usually?
-            // Actually looking at backend routes: router.put('/:pcode/:visidate', ...)
-            // And service uses visidate to getTableName.
-            // Let's assume we pass the raw visidate string from the item, or formatted.
-            // The item.VISIDATE is "2026. 2. 11." based on previous output.
-            // We need to pass clean YYYYMMDD to the API probably?
-            // Let's stick to the date state variable which is "YYYY-MM-DD" and convert to "YYYYMMDD"
-
-            const cleanDate = date.replace(/-/g, '');
-
+            const cleanDate = formatDateString(date);
             await api.put(`/mtswait/${pcode}/${cleanDate}`, editForm);
-
             setEditingKey(null);
-            fetchWaitList(date);
+
+            if (isViewingToday) {
+                await refresh();
+            } else {
+                fetchWaitList(date);
+            }
         } catch (error) {
             console.error('Failed to update record:', error);
             alert('Failed to update record');
@@ -86,14 +122,22 @@ export default function MtsWaitPage() {
         if (!confirm('정말로 대기자 명단에서 이 환자를 삭제하시겠습니까?')) return;
 
         try {
-            const cleanDate = date.replace(/-/g, '');
+            const cleanDate = formatDateString(date);
             await api.delete(`/mtswait/${pcode}/${cleanDate}`);
-            fetchWaitList(date);
+
+            if (isViewingToday) {
+                await refresh();
+            } else {
+                fetchWaitList(date);
+            }
         } catch (error) {
             console.error('Failed to delete record:', error);
             alert('삭제에 실패했습니다.');
         }
     };
+
+    // Use loading from context if viewing today
+    const isLoading = isViewingToday ? loading : false; // We ignore local loading for now or add duplicated state
 
     return (
         <div className="space-y-6">
@@ -102,6 +146,11 @@ export default function MtsWaitPage() {
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
                         대기자 명단 (MTSWAIT)
                     </h2>
+                    {isViewingToday && lastUpdated && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            마지막 업데이트: {lastUpdated.toLocaleTimeString()}
+                        </p>
+                    )}
                 </div>
                 <div className="mt-4 flex md:ml-4 md:mt-0">
                     <input
@@ -111,10 +160,10 @@ export default function MtsWaitPage() {
                         className="block rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 mr-3"
                     />
                     <button
-                        onClick={() => fetchWaitList(date)}
+                        onClick={() => isViewingToday ? refresh() : fetchWaitList(date)}
                         className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                     >
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                         새로고침
                     </button>
                 </div>
@@ -140,16 +189,16 @@ export default function MtsWaitPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
-                                        {loading ? (
+                                        {isLoading && localWaitList.length === 0 ? (
                                             <tr>
                                                 <td colSpan={7} className="py-4 text-center text-sm text-gray-500">로딩중...</td>
                                             </tr>
-                                        ) : waitList.length === 0 ? (
+                                        ) : localWaitList.length === 0 ? (
                                             <tr>
                                                 <td colSpan={7} className="py-4 text-center text-sm text-gray-500">해당 날짜에 대기자가 없습니다.</td>
                                             </tr>
                                         ) : (
-                                            waitList.map((item) => {
+                                            localWaitList.map((item) => {
                                                 const isEditing = editingKey === `${item.PCODE}-${item.VISIDATE}`;
                                                 return (
                                                     <tr key={`${item.PCODE}-${item.VISIDATE}`}>
@@ -241,9 +290,9 @@ export default function MtsWaitPage() {
                     </div>
                 </div>
             </div>
-            {waitList.length > 0 && (
+            {localWaitList.length > 0 && (
                 <div className="mt-4 text-sm text-gray-500 text-right px-6">
-                    총 {waitList.length} 명의 대기자가 있습니다.
+                    총 {localWaitList.length} 명의 대기자가 있습니다.
                 </div>
             )}
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useTranslations } from 'next-intl';
+import { formatDateToYYYYMMDD } from '@/lib/dateUtils';
 
 interface WaitItem {
     PCODE: string;
@@ -34,10 +35,7 @@ export default function WaitingList({ refreshTrigger = 0, onCountChange }: Waiti
         setLoading(true);
         try {
             const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const visidateFormatted = `${yyyy}${mm}${dd}`;
+            const visidateFormatted = formatDateToYYYYMMDD(today);
 
             const response = await api.get<any[]>(`/mtsmtr/date/${visidateFormatted}?fin=`);
             // Map mtsmtr fields to WaitItem

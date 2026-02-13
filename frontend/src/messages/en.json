@@ -34,7 +34,8 @@
         "description": "Search and view person records from the database.",
         "searchPlaceholder": "Search by name...",
         "birthdatePlaceholder": "YYYYMMDD",
-        "noRecords": "No persons found (Please provide both Name and Birthdate to search)",
+        "noRecords": "No visit records found. Please ask staff for assistance.",
+        "incompleteInput": "Please enter both Name and Birthdate(8 digits).",
         "table": {
             "pcode": "PCODE",
             "name": "Name",
@@ -104,7 +105,8 @@
         "filter": "Filter",
         "submit": "Submit",
         "close": "Close",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "clear": "Clear"
     },
     "messages": {
         "loading": "Loading...",

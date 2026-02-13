@@ -6,6 +6,7 @@ import { Person } from '@/types';
 import { Search, UserPlus, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Modal from './Modal';
+import { formatDateToYYYYMMDD } from '@/lib/dateUtils';
 
 interface PersonListProps {
     onRegisterSuccess?: () => void;
@@ -21,46 +22,51 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [birthDate, setBirthDate] = useState('');
     const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+    const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+    const [infoMessage, setInfoMessage] = useState('');
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-    // Initial load cleared, only search on demand or input
-    useEffect(() => {
-        const fetchPersons = async () => {
-            // Privacy: Require BOTH Name and Birthdate (8 digits) to search
-            if (!searchTerm || !birthDate || birthDate.length !== 8) {
-                setPersons([]);
-                setIsResultsModalOpen(false);
-                return;
+    const handleSearch = async () => {
+        // Privacy: Require BOTH Name and Birthdate (8 digits) to search
+        if (!searchTerm || !birthDate || birthDate.length !== 8) {
+            setInfoMessage(t('incompleteInput'));
+            setIsInfoModalOpen(true);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const params: any = {};
+            if (searchTerm) params.pname = searchTerm;
+            if (birthDate && birthDate.length === 8) {
+                params.pbirth = `${birthDate.substring(0, 4)}-${birthDate.substring(4, 6)}-${birthDate.substring(6, 8)}`;
             }
 
-            setLoading(true);
-            try {
-                const params: any = {};
-                if (searchTerm) params.pname = searchTerm;
-                if (birthDate && birthDate.length === 8) {
-                    params.pbirth = `${birthDate.substring(0, 4)}-${birthDate.substring(4, 6)}-${birthDate.substring(6, 8)}`;
-                }
+            const response = await api.get<Person[]>(`/persons/search`, { params });
+            setPersons(response.data);
 
-                if (searchTerm || (birthDate && birthDate.length === 8)) {
-                    const response = await api.get<Person[]>(`/persons/search`, { params });
-                    setPersons(response.data);
-                    if (response.data.length > 0) {
-                        setIsResultsModalOpen(true);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to fetch persons:', error);
-            } finally {
-                setLoading(false);
+            if (response.data.length > 0) {
+                setIsResultsModalOpen(true);
+            } else {
+                setInfoMessage(t('noRecords'));
+                setIsInfoModalOpen(true);
             }
-        };
+        } catch (error) {
+            console.error('Failed to fetch persons:', error);
+            alert(tMsg('error'));
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        const timer = setTimeout(() => {
-            fetchPersons();
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [searchTerm, birthDate]);
+    const handleClear = () => {
+        setSearchTerm('');
+        setBirthDate('');
+        setPersons([]);
+        setIsResultsModalOpen(false);
+        setIsInfoModalOpen(false);
+    };
 
     const handleRegister = (person: Person) => {
         setSelectedPerson(person);
@@ -73,11 +79,20 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
         const person = selectedPerson;
 
         const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const visidate = `${yyyy}-${mm}-${dd}`;
-        const visidateFormatted = `${yyyy}${mm}${dd}`;
+        const visidate = today.toISOString().split('T')[0]; // Keep YYYY-MM-DD for display/check if needed? Actually checkResponse below uses formatted.
+        // Wait, confirmRegistration Logic:
+        // const yyyy = today.getFullYear(); ...
+        // const visidate = `${yyyy}-${mm}-${dd}`;
+        // const visidateFormatted = `${yyyy}${mm}${dd}`;
+
+        const visidateFormatted = formatDateToYYYYMMDD(today);
+        // visidate for display (YYYY-MM-DD) can be derived or just use the utility if needed, but currently 'visidate' variable is used for 'alreadyRegistered' message.
+        // Let's keep 'visidate' as ISO string YYYY-MM-DD for readability in alert, or format it nicely.
+        // The original code used manual construction.
+
+        // Replicating original logic using utility where possible
+        const visidateDisplay = today.toISOString().split('T')[0];
+
 
         try {
             // Check existence
@@ -89,7 +104,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
                         (reg: any) => reg.PCODE === person.PCODE
                     );
                     if (alreadyRegistered) {
-                        alert(t('alreadyRegistered', { name: person.PNAME || '', date: visidate }));
+                        alert(t('alreadyRegistered', { name: person.PNAME || '', date: visidateDisplay }));
                         setIsRegisterModalOpen(false);
                         return;
                     }
@@ -100,7 +115,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
 
             await api.post('/mtswait', {
                 PCODE: person.PCODE,
-                VISIDATE: visidate
+                VISIDATE: visidateDisplay
             });
             alert(t('registerSuccess'));
             setIsRegisterModalOpen(false);
@@ -125,7 +140,7 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
         <div className="flex flex-col h-full bg-white shadow-md rounded-lg overflow-hidden">
             {/* Expanded Search Section - Fills More Space */}
             <div className="p-8 flex-shrink-0 flex flex-col justify-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">{t('searchTitle')}</h2>
+
 
                 <div className="flex flex-row space-x-8 mb-8">
                     {/* Name Input - Larger */}
@@ -155,6 +170,22 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
                             onChange={(e) => setBirthDate(e.target.value.replace(/[^0-9]/g, ''))}
                         />
                     </div>
+                </div>
+
+                <div className="flex justify-center mb-8 space-x-4">
+                    <button
+                        onClick={handleClear}
+                        className="w-1/3 max-w-sm py-6 bg-gray-400 hover:bg-gray-500 text-white font-bold rounded-2xl text-4xl shadow-xl transform hover:scale-105 transition-all flex items-center justify-center space-x-4"
+                    >
+                        <span>{tActions('clear')}</span>
+                    </button>
+                    <button
+                        onClick={handleSearch}
+                        className="w-full max-w-xl py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-4xl shadow-xl transform hover:scale-105 transition-all flex items-center justify-center space-x-4"
+                    >
+                        <Search className="w-10 h-10" />
+                        <span>{tActions('search')}</span>
+                    </button>
                 </div>
             </div>
 
@@ -191,6 +222,25 @@ export default function PersonList({ onRegisterSuccess }: PersonListProps) {
                             </button>
                         </div>
                     ))}
+                </div>
+            </Modal>
+
+            {/* Info API/Validation Modal */}
+            <Modal
+                isOpen={isInfoModalOpen}
+                onClose={() => setIsInfoModalOpen(false)}
+                title={t('searchTitle')} // Keep generic title or use generic 'Notification'
+                footer={
+                    <button
+                        onClick={() => setIsInfoModalOpen(false)}
+                        className="w-full py-4 bg-gray-200 text-gray-800 rounded-xl text-xl font-medium hover:bg-gray-300"
+                    >
+                        {tActions('close')}
+                    </button>
+                }
+            >
+                <div className="text-center py-12">
+                    <p className="text-4xl text-gray-600 mb-4">{infoMessage}</p>
                 </div>
             </Modal>
 
