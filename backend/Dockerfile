@@ -1,6 +1,10 @@
 # Build stage
 FROM node:20-alpine AS builder
 
+# Install tzdata for timezone support
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -11,6 +15,10 @@ RUN npm run build
 
 # Production stage
 FROM node:20-alpine
+
+# Install tzdata for timezone support
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul
 
 WORKDIR /app
 

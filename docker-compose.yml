@@ -7,6 +7,8 @@ services:
       - "3000:3000"
     env_file:
       - ./backend/.env
+    environment:
+      - TZ=Asia/Seoul
     restart: unless-stopped
     # If Firebird is running on the NAS host itself and not in docker:
     # Use extra_hosts to reach the host IP if needed, 
@@ -20,6 +22,7 @@ services:
       - "3001:3001"
     environment:
       - BACKEND_URL=http://backend:3000
+      - TZ=Asia/Seoul
     depends_on:
       - backend
     restart: unless-stopped

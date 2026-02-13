@@ -1,5 +1,9 @@
 FROM node:20-alpine AS base
 
+# Install tzdata for timezone support
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul
+
 # Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
