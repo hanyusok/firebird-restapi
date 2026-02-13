@@ -6,7 +6,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig: NextConfig = {
   output: 'standalone',
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    // const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const backendUrl = 'http://192.168.219.42:3000';
     return [
       {
         source: '/api/:path*',
